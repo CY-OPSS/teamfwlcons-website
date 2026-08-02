@@ -19,9 +19,13 @@ export function ViewCounter({ slug, locale = "zh" }: ViewCounterProps) {
           body: JSON.stringify({ slug, locale }),
         });
         const data = await res.json();
-        setViews(data.views);
+        if (data && typeof data.views === "number") {
+          setViews(data.views);
+        } else {
+          setViews(0);
+        }
       } catch {
-        console.error("Failed to update views");
+        setViews(0);
       }
     };
 

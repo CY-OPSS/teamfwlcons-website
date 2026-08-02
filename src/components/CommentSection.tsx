@@ -31,7 +31,9 @@ export function CommentSection({ postSlug, locale = "zh" }: CommentSectionProps)
           `/api/comments?postSlug=${postSlug}&locale=${locale}`
         );
         const data = await res.json();
-        setComments(data);
+        if (Array.isArray(data)) {
+          setComments(data);
+        }
       } catch {
         console.error("Failed to fetch comments");
       }
