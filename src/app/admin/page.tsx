@@ -83,7 +83,7 @@ export default function AdminPage() {
                 },
               });
               const contentData = await contentRes.json();
-              const content = atob(contentData.content);
+              const content = decodeURIComponent(escape(atob(contentData.content)));
               
               // Parse frontmatter
               const match = content.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
