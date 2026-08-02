@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useState } from "react";
 
@@ -19,7 +18,7 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-neutral-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -27,7 +26,7 @@ export function Navbar() {
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-yellow-400 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">TF</span>
             </div>
-            <span className="text-xl font-bold text-neutral-900 dark:text-white">
+            <span className="text-xl font-bold text-neutral-900">
               TeamFwlcons
             </span>
           </Link>
@@ -38,7 +37,7 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-neutral-600 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
+                className="text-neutral-600 hover:text-blue-600 transition-colors font-medium"
               >
                 {item.label}
               </Link>
@@ -48,11 +47,16 @@ export function Navbar() {
           {/* Right side controls */}
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <ThemeToggle />
+            <Link
+              href="/zh/login"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              登录
+            </Link>
 
             {/* Mobile menu button */}
             <button
-              className="md:hidden p-2 rounded-md text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+              className="md:hidden p-2 rounded-md text-neutral-600 hover:bg-neutral-200"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <svg
@@ -83,13 +87,13 @@ export function Navbar() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-neutral-200 dark:border-neutral-800">
+          <div className="md:hidden py-4 border-t border-neutral-200">
             <div className="flex flex-col gap-4">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-neutral-600 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium px-2 py-1"
+                  className="text-neutral-600 hover:text-blue-600 transition-colors font-medium px-2 py-1"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}

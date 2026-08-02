@@ -97,15 +97,15 @@ export function CommentSection({ postSlug, locale = "zh" }: CommentSectionProps)
           </div>
         </form>
       ) : (
-        <div className="mb-8 p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg text-center">
-          <p className="text-neutral-600 dark:text-neutral-400 mb-3">
+        <div className="mb-8 p-4 bg-neutral-50 rounded-lg text-center">
+          <p className="text-neutral-600 mb-3">
             请先登录后再评论
           </p>
           <a
-            href="/admin"
+            href="/zh/login"
             className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
           >
-            登录
+            登录 / 注册
           </a>
         </div>
       )}

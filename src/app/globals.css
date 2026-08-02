@@ -5,67 +5,10 @@
   --foreground: #171717;
 }
 
-.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-}
-
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
-}
-
-/* Dark mode text colors */
-.dark .prose {
-  color: #e5e7eb;
-}
-
-.dark .prose h1,
-.dark .prose h2,
-.dark .prose h3,
-.dark .prose h4,
-.dark .prose h5,
-.dark .prose h6 {
-  color: #f9fafb;
-}
-
-.dark .prose p {
-  color: #d1d5db;
-}
-
-.dark .prose a {
-  color: #60a5fa;
-}
-
-.dark .prose strong {
-  color: #f9fafb;
-}
-
-.dark .prose code {
-  color: #f9fafb;
-}
-
-.dark .prose pre {
-  background-color: #1f2937;
-  color: #e5e7eb;
-}
-
-.dark .prose blockquote {
-  color: #d1d5db;
-  border-left-color: #4b5563;
-}
-
-.dark .prose hr {
-  border-color: #374151;
-}
-
-.dark .prose thead {
-  color: #f9fafb;
-}
-
-.dark .prose tbody tr {
-  border-bottom-color: #374151;
 }
 
 /* Custom scrollbar */

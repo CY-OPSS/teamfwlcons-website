@@ -9,8 +9,16 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
 
   const switchLocale = (newLocale: string) => {
-    // Remove current locale from pathname
-    const pathWithoutLocale = pathname.replace(/^\/(zh|en)/, "") || "/";
+    if (newLocale === locale) return;
+    
+    // Remove current locale from pathname if it exists
+    let pathWithoutLocale = pathname;
+    if (pathname.startsWith("/zh")) {
+      pathWithoutLocale = pathname.substring(3) || "/";
+    } else if (pathname.startsWith("/en")) {
+      pathWithoutLocale = pathname.substring(3) || "/";
+    }
+    
     // Navigate to new locale
     router.push(`/${newLocale}${pathWithoutLocale}`);
   };
@@ -22,7 +30,7 @@ export function LanguageSwitcher() {
         className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
           locale === "zh"
             ? "bg-blue-600 text-white"
-            : "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600"
+            : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
         }`}
       >
         中文
@@ -32,7 +40,7 @@ export function LanguageSwitcher() {
         className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
           locale === "en"
             ? "bg-blue-600 text-white"
-            : "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600"
+            : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
         }`}
       >
         EN
