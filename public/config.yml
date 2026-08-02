@@ -1,0 +1,60 @@
+backend:
+  name: github
+  repo: CY-OPSS/teamfwlcons-website
+  branch: main
+
+media_folder: public/images
+public_folder: /images
+
+collections:
+  - name: "blog-zh"
+    label: "博客 (中文)"
+    folder: "src/content/blog/zh"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "标题", name: "title", widget: "string" }
+      - { label: "描述", name: "description", widget: "text", required: false }
+      - { label: "发布日期", name: "date", widget: "datetime" }
+      - { label: "分类", name: "category", widget: "select", options: ["赛事", "攻略", "新闻", "技术", "日常"], default: "新闻" }
+      - { label: "标签", name: "tags", widget: "list", required: false }
+      - { label: "封面图", name: "coverImage", widget: "image", required: false }
+      - { label: "作者", name: "author", widget: "string", required: false }
+      - { label: "正文", name: "body", widget: "markdown" }
+
+  - name: "blog-en"
+    label: "Blog (English)"
+    folder: "src/content/blog/en"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "text", required: false }
+      - { label: "Date", name: "date", widget: "datetime" }
+      - { label: "Category", name: "category", widget: "select", options: ["Tournament", "Guide", "News", "Tech", "Daily"], default: "News" }
+      - { label: "Tags", name: "tags", widget: "list", required: false }
+      - { label: "Cover Image", name: "coverImage", widget: "image", required: false }
+      - { label: "Author", name: "author", widget: "string", required: false }
+      - { label: "Body", name: "body", widget: "markdown" }
+
+  - name: "docs-zh"
+    label: "文档 (中文)"
+    folder: "src/content/docs/zh"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "标题", name: "title", widget: "string" }
+      - { label: "描述", name: "description", widget: "text", required: false }
+      - { label: "排序", name: "order", widget: "number", default: 0 }
+      - { label: "正文", name: "body", widget: "markdown" }
+
+  - name: "docs-en"
+    label: "Documentation (English)"
+    folder: "src/content/docs/en"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "text", required: false }
+      - { label: "Order", name: "order", widget: "number", default: 0 }
+      - { label: "Body", name: "body", widget: "markdown" }
