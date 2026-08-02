@@ -1,0 +1,66 @@
+---
+members:
+  - id: "captain"
+    name: "Alex"
+    role: "captain"
+    bio: "战队创始人兼指挥，拥有丰富的比赛经验和出色的战术意识。"
+    social:
+      steam: "https://steamcommunity.com"
+      twitter: "https://twitter.com"
+      discord: "https://discord.gg"
+    stats:
+      rating: "1.25"
+      headshot: "45%"
+      winRate: "68%"
+
+  - id: "player1"
+    name: "Jordan"
+    role: "player"
+    bio: "主狙击手，精准的枪法和冷静的判断是团队的核心火力。"
+    social:
+      steam: "https://steamcommunity.com"
+    stats:
+      rating: "1.18"
+      headshot: "52%"
+      winRate: "65%"
+
+  - id: "player2"
+    name: "Sam"
+    role: "player"
+    bio: "突破手，以激进的打法和快速的反应著称。"
+    social:
+      steam: "https://steamcommunity.com"
+    stats:
+      rating: "1.12"
+      headshot: "48%"
+      winRate: "62%"
+
+  - id: "player3"
+    name: "Chris"
+    role: "player"
+    bio: "辅助选手，擅长道具使用和信息收集。"
+    social:
+      steam: "https://steamcommunity.com"
+    stats:
+      rating: "1.08"
+      headshot: "42%"
+      winRate: "60%"
+
+  - id: "player4"
+    name: "Taylor"
+    role: "player"
+    bio: "自由人，灵活多变的打法为团队创造空间。"
+    social:
+      steam: "https://steamcommunity.com"
+    stats:
+      rating: "1.05"
+      headshot: "40%"
+      winRate: "58%"
+
+  - id: "coach"
+    name: "Morgan"
+    role: "coach"
+    bio: "资深教练，专注于战术研究和团队配合训练。"
+    social:
+      twitter: "https://twitter.com"
+    stats: {}

@@ -1,0 +1,63 @@
+{
+  "nav": {
+    "home": "Home",
+    "blog": "Blog",
+    "docs": "Docs",
+    "team": "Team",
+    "about": "About"
+  },
+  "home": {
+    "hero": {
+      "title": "TeamFwlcons",
+      "subtitle": "School CS2 Esports Team",
+      "description": "We are a passionate Counter-Strike 2 team dedicated to competitive excellence and teamwork.",
+      "cta": "Learn More"
+    },
+    "latestPosts": "Latest Updates",
+    "hotPosts": "Hot Posts",
+    "viewAll": "View All"
+  },
+  "blog": {
+    "title": "Blog",
+    "readMore": "Read More",
+    "categories": "Categories",
+    "tags": "Tags",
+    "archive": "Archive",
+    "noPosts": "No posts yet"
+  },
+  "docs": {
+    "title": "Documentation",
+    "search": "Search docs...",
+    "noResults": "No documents found"
+  },
+  "team": {
+    "title": "Our Team",
+    "role": {
+      "captain": "Captain",
+      "player": "Player",
+      "coach": "Coach",
+      "analyst": "Analyst",
+      "manager": "Manager"
+    }
+  },
+  "about": {
+    "title": "About Us",
+    "history": "Team History",
+    "honors": "Achievements",
+    "contact": "Contact Us"
+  },
+  "common": {
+    "readTime": "Read time",
+    "minutes": "min",
+    "publishedOn": "Published on",
+    "backToTop": "Back to top",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "language": "Language",
+    "comments": "Comments",
+    "noComments": "No comments yet",
+    "loginToComment": "Login to comment",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  }
+}

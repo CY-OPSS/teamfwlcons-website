@@ -1,0 +1,63 @@
+{
+  "nav": {
+    "home": "首页",
+    "blog": "博客",
+    "docs": "文档",
+    "team": "团队",
+    "about": "关于"
+  },
+  "home": {
+    "hero": {
+      "title": "TeamFwlcons",
+      "subtitle": "学校 CS2 电竞战队",
+      "description": "我们是一支充满激情的 Counter-Strike 2 战队，致力于竞技 excellence 和团队协作。",
+      "cta": "了解更多"
+    },
+    "latestPosts": "最新动态",
+    "hotPosts": "热门文章",
+    "viewAll": "查看全部"
+  },
+  "blog": {
+    "title": "博客",
+    "readMore": "阅读全文",
+    "categories": "分类",
+    "tags": "标签",
+    "archive": "归档",
+    "noPosts": "暂无文章"
+  },
+  "docs": {
+    "title": "文档",
+    "search": "搜索文档...",
+    "noResults": "未找到相关文档"
+  },
+  "team": {
+    "title": "我们的团队",
+    "role": {
+      "captain": "队长",
+      "player": "选手",
+      "coach": "教练",
+      "analyst": "分析师",
+      "manager": "经理"
+    }
+  },
+  "about": {
+    "title": "关于战队",
+    "history": "战队历史",
+    "honors": "荣誉成就",
+    "contact": "联系我们"
+  },
+  "common": {
+    "readTime": "阅读时间",
+    "minutes": "分钟",
+    "publishedOn": "发布于",
+    "backToTop": "回到顶部",
+    "darkMode": "暗色模式",
+    "lightMode": "亮色模式",
+    "language": "语言",
+    "comments": "评论",
+    "noComments": "暂无评论",
+    "loginToComment": "登录后评论",
+    "submit": "提交",
+    "cancel": "取消"
+  }
+}
