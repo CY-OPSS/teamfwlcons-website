@@ -48,6 +48,16 @@ export default function AdminPage() {
     setPosts([]);
   };
 
+  const DEPLOY_HOOK = "https://api.vercel.com/v1/integrations/deploy/prj_6L84y6UWCv4NZhJl2lXxQbpX9ZV1/hzXqDN3s2A";
+
+  const triggerDeploy = async () => {
+    try {
+      await fetch(DEPLOY_HOOK, { method: "POST" });
+    } catch {
+      // Silent fail
+    }
+  };
+
   const loadPosts = async (t: string) => {
     setLoading(true);
     try {
@@ -150,9 +160,10 @@ ${newPost.content}`;
       );
 
       if (res.ok) {
-        setMessage("文章创建成功！");
+        setMessage("文章创建成功，正在自动部署...");
         setNewPost({ title: "", date: new Date().toISOString().split("T")[0], category: "新闻", content: "" });
-        loadPosts(token);
+        await loadPosts(token);
+        await triggerDeploy();
       } else {
         setMessage("创建失败，请检查 token 权限");
       }
@@ -193,9 +204,10 @@ ${editing.content}`;
       );
 
       if (res.ok) {
-        setMessage("文章更新成功！");
+        setMessage("文章更新成功，正在自动部署...");
         setEditing(null);
-        loadPosts(token);
+        await loadPosts(token);
+        await triggerDeploy();
       } else {
         setMessage("更新失败");
       }
@@ -208,6 +220,18 @@ ${editing.content}`;
     if (!confirm(`确定要删除文章 "${post.title}" 吗？`)) return;
 
     try {
+      // First get the current file sha
+      const fileRes = await fetch(
+        `https://api.github.com/repos/CY-OPSS/teamfwlcons-website/contents/src/content/blog/zh/${post.slug}.md`,
+        {
+          headers: {
+            Authorization: `token ${token}`,
+            Accept: "application/vnd.github.v3+json",
+          },
+        }
+      );
+      const fileData = await fileRes.json();
+      
       const res = await fetch(
         `https://api.github.com/repos/CY-OPSS/teamfwlcons-website/contents/src/content/blog/zh/${post.slug}.md`,
         {
@@ -219,20 +243,22 @@ ${editing.content}`;
           },
           body: JSON.stringify({
             message: `delete: remove blog post "${post.title}"`,
-            sha: post.sha,
+            sha: fileData.sha,
           }),
         }
       );
 
       if (res.ok) {
-        setMessage("文章已删除");
+        setMessage("文章已删除，正在自动部署...");
         setEditing(null);
-        loadPosts(token);
+        await loadPosts(token);
+        await triggerDeploy();
       } else {
-        setMessage("删除失败");
+        const errData = await res.json();
+        setMessage(`删除失败: ${errData.message || "未知错误"}`);
       }
-    } catch {
-      setMessage("删除失败，请重试");
+    } catch (err) {
+      setMessage(`删除失败: ${err}`);
     }
   };
 
