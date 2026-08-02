@@ -8,6 +8,7 @@ interface Post {
   date: string;
   category: string;
   content: string;
+  sha: string;
 }
 
 export default function AdminPage() {
@@ -15,14 +16,14 @@ export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [editing, setEditing] = useState<Post | null>(null);
-  const [newPost, setNewPost] = useState<Post>({
-    slug: "",
+  const [newPost, setNewPost] = useState({
     title: "",
     date: new Date().toISOString().split("T")[0],
     category: "新闻",
     content: "",
   });
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("github_token");
@@ -44,9 +45,11 @@ export default function AdminPage() {
     localStorage.removeItem("github_token");
     setIsLoggedIn(false);
     setToken("");
+    setPosts([]);
   };
 
   const loadPosts = async (t: string) => {
+    setLoading(true);
     try {
       const res = await fetch(
         "https://api.github.com/repos/CY-OPSS/teamfwlcons-website/contents/src/content/blog/zh",
@@ -59,20 +62,53 @@ export default function AdminPage() {
       );
       const data = await res.json();
       if (Array.isArray(data)) {
-        const postList = data
-          .filter((f: { name: string }) => f.name.endsWith(".md"))
-          .map((f: { name: string }) => ({
-            slug: f.name.replace(".md", ""),
-            title: f.name.replace(".md", ""),
-            date: "",
-            category: "",
-            content: "",
-          }));
+        const postList = await Promise.all(
+          data
+            .filter((f: { name: string }) => f.name.endsWith(".md"))
+            .map(async (f: { name: string; sha: string }) => {
+              const contentRes = await fetch(f.url, {
+                headers: {
+                  Authorization: `token ${t}`,
+                  Accept: "application/vnd.github.v3+json",
+                },
+              });
+              const contentData = await contentRes.json();
+              const content = atob(contentData.content);
+              
+              // Parse frontmatter
+              const match = content.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
+              let title = f.name.replace(".md", "");
+              let date = "";
+              let category = "";
+              let body = content;
+              
+              if (match) {
+                const frontmatter = match[1];
+                body = match[2].trim();
+                const titleMatch = frontmatter.match(/title:\s*"?(.+?)"?\s*$/m);
+                const dateMatch = frontmatter.match(/date:\s*"?(.+?)"?\s*$/m);
+                const categoryMatch = frontmatter.match(/category:\s*"?(.+?)"?\s*$/m);
+                if (titleMatch) title = titleMatch[1];
+                if (dateMatch) date = dateMatch[1];
+                if (categoryMatch) category = categoryMatch[1];
+              }
+              
+              return {
+                slug: f.name.replace(".md", ""),
+                title,
+                date,
+                category,
+                content: body,
+                sha: contentData.sha,
+              };
+            })
+        );
         setPosts(postList);
       }
     } catch {
       setMessage("加载文章失败");
     }
+    setLoading(false);
   };
 
   const createPost = async () => {
@@ -115,19 +151,88 @@ ${newPost.content}`;
 
       if (res.ok) {
         setMessage("文章创建成功！");
-        setNewPost({
-          slug: "",
-          title: "",
-          date: new Date().toISOString().split("T")[0],
-          category: "新闻",
-          content: "",
-        });
+        setNewPost({ title: "", date: new Date().toISOString().split("T")[0], category: "新闻", content: "" });
         loadPosts(token);
       } else {
         setMessage("创建失败，请检查 token 权限");
       }
     } catch {
       setMessage("创建失败，请重试");
+    }
+  };
+
+  const updatePost = async () => {
+    if (!editing) return;
+
+    const frontmatter = `---
+title: "${editing.title}"
+description: ""
+date: "${editing.date}"
+category: "${editing.category}"
+tags: []
+---
+
+${editing.content}`;
+
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/CY-OPSS/teamfwlcons-website/contents/src/content/blog/zh/${editing.slug}.md`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `token ${token}`,
+            Accept: "application/vnd.github.v3+json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `update: edit blog post "${editing.title}"`,
+            content: btoa(unescape(encodeURIComponent(frontmatter))),
+            sha: editing.sha,
+          }),
+        }
+      );
+
+      if (res.ok) {
+        setMessage("文章更新成功！");
+        setEditing(null);
+        loadPosts(token);
+      } else {
+        setMessage("更新失败");
+      }
+    } catch {
+      setMessage("更新失败，请重试");
+    }
+  };
+
+  const deletePost = async (post: Post) => {
+    if (!confirm(`确定要删除文章 "${post.title}" 吗？`)) return;
+
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/CY-OPSS/teamfwlcons-website/contents/src/content/blog/zh/${post.slug}.md`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `token ${token}`,
+            Accept: "application/vnd.github.v3+json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `delete: remove blog post "${post.title}"`,
+            sha: post.sha,
+          }),
+        }
+      );
+
+      if (res.ok) {
+        setMessage("文章已删除");
+        setEditing(null);
+        loadPosts(token);
+      } else {
+        setMessage("删除失败");
+      }
+    } catch {
+      setMessage("删除失败，请重试");
     }
   };
 
@@ -142,6 +247,7 @@ ${newPost.content}`;
             type="password"
             value={token}
             onChange={(e) => setToken(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && login()}
             className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4"
             placeholder="GitHub Personal Access Token"
           />
@@ -165,16 +271,10 @@ ${newPost.content}`;
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">TeamFwlcons 管理后台</h1>
           <div className="flex items-center gap-4">
-            <a
-              href="/"
-              className="text-blue-600 hover:underline"
-            >
+            <a href="/" className="text-blue-600 hover:underline">
               查看网站
             </a>
-            <button
-              onClick={logout}
-              className="text-red-600 hover:underline"
-            >
+            <button onClick={logout} className="text-red-600 hover:underline">
               退出
             </button>
           </div>
@@ -183,70 +283,105 @@ ${newPost.content}`;
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {message && (
-          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
-            {message}
-            <button onClick={() => setMessage("")} className="float-right">
-              ×
-            </button>
+          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-md flex justify-between items-center">
+            <span>{message}</span>
+            <button onClick={() => setMessage("")} className="text-lg font-bold">×</button>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* 文章列表 */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-bold mb-4">已有文章</h2>
-            {posts.length === 0 ? (
+            <h2 className="text-lg font-bold mb-4">已有文章 ({posts.length})</h2>
+            {loading ? (
+              <p className="text-gray-500">加载中...</p>
+            ) : posts.length === 0 ? (
               <p className="text-gray-500">暂无文章</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {posts.map((post) => (
-                  <li key={post.slug} className="p-3 bg-gray-50 rounded">
-                    {post.slug}
+                  <li
+                    key={post.slug}
+                    className={`p-4 rounded border cursor-pointer transition-colors ${
+                      editing?.slug === post.slug
+                        ? "bg-blue-50 border-blue-300"
+                        : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                    }`}
+                    onClick={() => setEditing(post)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium">{post.title}</div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {post.date && <span>{post.date}</span>}
+                          {post.category && <span className="ml-2">• {post.category}</span>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deletePost(post);
+                        }}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        删除
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
           </div>
 
-          {/* 创建新文章 */}
+          {/* 编辑/创建文章 */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-bold mb-4">发布新文章</h2>
+            <h2 className="text-lg font-bold mb-4">
+              {editing ? "编辑文章" : "发布新文章"}
+            </h2>
+            {editing && (
+              <button
+                onClick={() => setEditing(null)}
+                className="mb-4 text-blue-600 hover:underline text-sm"
+              >
+                ← 返回新建
+              </button>
+            )}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  标题
-                </label>
+                <label className="block text-sm font-medium mb-1">标题</label>
                 <input
                   type="text"
-                  value={newPost.title}
+                  value={editing ? editing.title : newPost.title}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, title: e.target.value })
+                    editing
+                      ? setEditing({ ...editing, title: e.target.value })
+                      : setNewPost({ ...newPost, title: e.target.value })
                   }
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder="文章标题"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  日期
-                </label>
+                <label className="block text-sm font-medium mb-1">日期</label>
                 <input
                   type="date"
-                  value={newPost.date}
+                  value={editing ? editing.date : newPost.date}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, date: e.target.value })
+                    editing
+                      ? setEditing({ ...editing, date: e.target.value })
+                      : setNewPost({ ...newPost, date: e.target.value })
                   }
                   className="w-full px-3 py-2 border rounded-md"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  分类
-                </label>
+                <label className="block text-sm font-medium mb-1">分类</label>
                 <select
-                  value={newPost.category}
+                  value={editing ? editing.category : newPost.category}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, category: e.target.value })
+                    editing
+                      ? setEditing({ ...editing, category: e.target.value })
+                      : setNewPost({ ...newPost, category: e.target.value })
                   }
                   className="w-full px-3 py-2 border rounded-md"
                 >
@@ -262,20 +397,32 @@ ${newPost.content}`;
                   内容 (Markdown)
                 </label>
                 <textarea
-                  value={newPost.content}
+                  value={editing ? editing.content : newPost.content}
                   onChange={(e) =>
-                    setNewPost({ ...newPost, content: e.target.value })
+                    editing
+                      ? setEditing({ ...editing, content: e.target.value })
+                      : setNewPost({ ...newPost, content: e.target.value })
                   }
-                  className="w-full px-3 py-2 border rounded-md h-48"
+                  className="w-full px-3 py-2 border rounded-md h-64 font-mono text-sm"
                   placeholder="文章内容，支持 Markdown 格式"
                 />
               </div>
-              <button
-                onClick={createPost}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-              >
-                发布文章
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={editing ? updatePost : createPost}
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                >
+                  {editing ? "保存修改" : "发布文章"}
+                </button>
+                {editing && (
+                  <button
+                    onClick={() => deletePost(editing)}
+                    className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
+                  >
+                    删除
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
