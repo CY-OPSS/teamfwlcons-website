@@ -47,6 +47,7 @@
         border: 1px solid #d1d5db;
         border-radius: 0.375rem;
         margin-bottom: 1rem;
+        box-sizing: border-box;
       }
       .form-container button {
         width: 100%;
@@ -87,31 +88,27 @@
         var token = document.getElementById('token-input').value.trim();
         if (!token) return;
         
-        // Store the token
-        localStorage.setItem('gh_token', token);
-        
-        // Hide the form
-        document.getElementById('token-form').classList.remove('show');
-        
-        // Initialize CMS
-        initCMS();
-      }
-      
-      function initCMS() {
-        // Load the CMS script
-        var script = document.createElement('script');
-        script.src = 'https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js';
-        script.onload = function() {
-          // CMS is loaded
+        // Store the token in the format Decap CMS expects
+        var userData = {
+          token: token,
+          login: "CY-OPSS",
+          backend: "github"
         };
-        document.body.appendChild(script);
+        localStorage.setItem('decap-cms-user', JSON.stringify(userData));
+        
+        // Reload the page to initialize CMS with the token
+        window.location.reload();
       }
       
       // Check if we have a stored token
-      var storedToken = localStorage.getItem('gh_token');
-      if (storedToken) {
-        initCMS();
+      var storedUser = localStorage.getItem('decap-cms-user');
+      if (storedUser) {
+        // User is logged in, load CMS
+        var script = document.createElement('script');
+        script.src = 'https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js';
+        document.body.appendChild(script);
       } else {
+        // Show login form
         document.getElementById('token-form').classList.add('show');
       }
     </script>
