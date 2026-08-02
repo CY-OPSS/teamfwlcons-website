@@ -2,8 +2,6 @@ backend:
   name: github
   repo: CY-OPSS/teamfwlcons-website
   branch: main
-  auth_type: pkce
-  base_url: https://teamfwlcons-website.vercel.app
 
 media_folder: public/images
 public_folder: /images
