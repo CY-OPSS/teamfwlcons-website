@@ -1,5 +1,27 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import fs from "fs";
+import path from "path";
+
+const USERS_FILE = path.join(process.cwd(), "data", "users.json");
+
+interface User {
+  id: string;
+  username: string;
+  password: string;
+  createdAt: string;
+}
+
+function getUsers(): User[] {
+  try {
+    if (!fs.existsSync(USERS_FILE)) {
+      return [];
+    }
+    const data = fs.readFileSync(USERS_FILE, "utf-8");
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -12,29 +34,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find user by email (using email as username for simplicity)
-    const user = await prisma.user.findUnique({
-      where: { email: `${username}@teamfwlcons.gg` },
-    });
+    const users = getUsers();
+
+    // Find user
+    const user = users.find(
+      (u) => u.username === username && u.password === password
+    );
 
     if (!user) {
       return NextResponse.json(
-        { error: "用户不存在，请先注册" },
+        { error: "用户名或密码错误" },
         { status: 401 }
       );
     }
 
-    // For simplicity, we'll just check if the user exists
-    // In production, you should verify password hash
     return NextResponse.json({
       user: {
         id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        username: user.username,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("Login error:", err);
     return NextResponse.json(
       { error: "登录失败，请重试" },
       { status: 500 }

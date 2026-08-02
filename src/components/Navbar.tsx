@@ -1,20 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useState } from "react";
 
 export function Navbar() {
-  const t = useTranslations("nav");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { href: "/", label: t("home") },
-    { href: "/blog", label: t("blog") },
-    { href: "/docs", label: t("docs") },
-    { href: "/team", label: t("team") },
-    { href: "/about", label: t("about") },
+    { href: "/", label: "首页" },
+    { href: "/blog", label: "博客" },
+    { href: "/docs", label: "文档" },
+    { href: "/team", label: "团队" },
+    { href: "/about", label: "关于" },
   ];
 
   return (
@@ -46,9 +43,8 @@ export function Navbar() {
 
           {/* Right side controls */}
           <div className="flex items-center gap-4">
-            <LanguageSwitcher />
             <Link
-              href="/zh/login"
+              href="/login"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
             >
               登录

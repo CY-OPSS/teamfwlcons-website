@@ -102,7 +102,7 @@ export function CommentSection({ postSlug, locale = "zh" }: CommentSectionProps)
             请先登录后再评论
           </p>
           <a
-            href="/zh/login"
+            href="/login"
             className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
           >
             登录 / 注册
