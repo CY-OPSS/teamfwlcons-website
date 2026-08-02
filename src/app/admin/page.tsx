@@ -65,7 +65,7 @@ export default function AdminPage() {
         const postList = await Promise.all(
           data
             .filter((f: { name: string }) => f.name.endsWith(".md"))
-            .map(async (f: { name: string; sha: string }) => {
+            .map(async (f: { name: string; sha: string; url: string }) => {
               const contentRes = await fetch(f.url, {
                 headers: {
                   Authorization: `token ${t}`,
