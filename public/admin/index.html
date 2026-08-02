@@ -5,8 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
     <title>TeamFwlcons CMS</title>
+    <style>
+      #token-form {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f3f4f6;
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      }
+      #token-form.show {
+        display: flex;
+      }
+      .form-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+      .form-container h1 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+      .form-container p {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+      .form-container input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+      }
+      .form-container button {
+        width: 100%;
+        background: #2563eb;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .form-container button:hover {
+        background: #1d4ed8;
+      }
+    </style>
   </head>
   <body>
-    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <div id="token-form">
+      <div class="form-container">
+        <h1>TeamFwlcons CMS</h1>
+        <p>请使用 GitHub Personal Access Token 登录</p>
+        <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" />
+        <button onclick="loginWithToken()">登录</button>
+        <div style="margin-top: 1.5rem; text-align: center;">
+          <p style="color: #9ca3af; font-size: 0.75rem;">如何获取 Token：</p>
+          <ol style="color: #9ca3af; font-size: 0.75rem; margin-top: 0.5rem; text-align: left; list-style: decimal; padding-left: 1.5rem;">
+            <li>访问 GitHub Settings → Developer settings → Personal access tokens</li>
+            <li>点击 "Generate new token (classic)"</li>
+            <li>选择 "repo" 权限</li>
+            <li>复制生成的 token</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function loginWithToken() {
+        var token = document.getElementById('token-input').value.trim();
+        if (!token) return;
+        
+        // Store the token
+        localStorage.setItem('gh_token', token);
+        
+        // Hide the form
+        document.getElementById('token-form').classList.remove('show');
+        
+        // Initialize CMS
+        initCMS();
+      }
+      
+      function initCMS() {
+        // Load the CMS script
+        var script = document.createElement('script');
+        script.src = 'https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js';
+        script.onload = function() {
+          // CMS is loaded
+        };
+        document.body.appendChild(script);
+      }
+      
+      // Check if we have a stored token
+      var storedToken = localStorage.getItem('gh_token');
+      if (storedToken) {
+        initCMS();
+      } else {
+        document.getElementById('token-form').classList.add('show');
+      }
+    </script>
   </body>
 </html>

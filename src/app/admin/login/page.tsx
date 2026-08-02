@@ -1,22 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
   const [token, setToken] = useState("");
-  const router = useRouter();
+
+  useEffect(() => {
+    // Check if we have a token in the URL hash
+    const hash = window.location.hash;
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get("access_token");
+      if (accessToken) {
+        // Store the token and redirect to CMS
+        localStorage.setItem("decap-cms-user", JSON.stringify({
+          token: accessToken,
+          login: "CY-OPSS",
+        }));
+        window.location.href = "/admin/index.html#/";
+      }
+    }
+  }, []);
 
   const handleLogin = () => {
     if (!token.trim()) return;
     
-    // Save token to localStorage in the format Decap CMS expects
-    const userData = {
+    // Save token in the format Decap CMS expects
+    localStorage.setItem("decap-cms-user", JSON.stringify({
       token: token.trim(),
       login: "CY-OPSS",
-    };
-    
-    localStorage.setItem("decap-cms-user", JSON.stringify(userData));
+    }));
     
     // Redirect to CMS
     window.location.href = "/admin/index.html#/";
