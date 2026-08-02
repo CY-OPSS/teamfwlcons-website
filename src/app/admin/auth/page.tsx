@@ -1,82 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function AuthPage() {
-  const [status, setStatus] = useState("处理中...");
+  const [token, setToken] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const handleAuth = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!token.trim()) {
+      setError("请输入 GitHub Personal Access Token");
+      return;
+    }
 
-      if (!code) {
-        // No code, redirect to GitHub
-        const clientId = "Ov23litzSCwOJ4wdOt0N";
-        const redirectUri = encodeURIComponent(
-          `${window.location.origin}/admin/auth`
-        );
-        window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=repo,user`;
-        return;
-      }
+    // Send token to CMS
+    const message = `authorization:github:success:${JSON.stringify({
+      token: token.trim(),
+      provider: "github",
+    })}`;
 
-      try {
-        // Exchange code for token
-        const response = await fetch("/api/auth/token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
-        });
-
-        const data = await response.json();
-
-        if (data.error) {
-          setError(data.error_description || data.error);
-          setStatus("授权失败");
-          return;
-        }
-
-        // Send token to CMS
-        const message = `authorization:github:success:${JSON.stringify({
-          token: data.access_token,
-          provider: "github",
-        })}`;
-
-        if (window.opener) {
-          window.opener.postMessage(message, window.location.origin);
-          setStatus("授权成功，正在关闭...");
-          setTimeout(() => window.close(), 1000);
-        } else {
-          setStatus("授权成功！");
-        }
-      } catch (err) {
-        setError("请求失败，请重试");
-        setStatus("授权失败");
-      }
-    };
-
-    handleAuth();
-  }, []);
+    if (window.opener) {
+      window.opener.postMessage(message, window.location.origin);
+      window.close();
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
         <h1 className="text-2xl font-bold mb-4 text-center">
-          TeamFwlcons CMS 授权
+          TeamFwlcons CMS 登录
         </h1>
-        <div className="text-center">
-          {error ? (
-            <div className="text-red-600 mb-4">
-              <p className="font-semibold">{status}</p>
-              <p className="text-sm mt-2">{error}</p>
-            </div>
-          ) : (
-            <div>
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">{status}</p>
+        <p className="text-gray-600 mb-6 text-center text-sm">
+          请使用 GitHub Personal Access Token 登录
+        </p>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              GitHub Personal Access Token
+            </label>
+            <input
+              type="password"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="ghp_xxxxxxxxxxxx"
+            />
+          </div>
+          
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+              {error}
             </div>
           )}
+          
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            登录
+          </button>
+        </form>
+        
+        <div className="mt-6 text-center">
+          <p className="text-gray-500 text-xs">
+            如何获取 Token：
+          </p>
+          <ol className="text-gray-500 text-xs mt-2 text-left list-decimal list-inside">
+            <li>访问 GitHub Settings → Developer settings → Personal access tokens</li>
+            <li>点击 &quot;Generate new token (classic)&quot;</li>
+            <li>选择 &quot;repo&quot; 权限</li>
+            <li>复制生成的 token</li>
+          </ol>
         </div>
       </div>
     </div>
