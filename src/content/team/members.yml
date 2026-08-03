@@ -1,7 +1,7 @@
 ---
 members:
   - id: "captain"
-    name: "Alex"
+    name: "Facwink"
     role: "In-game Leader"
     isCaptain: false
     bio: "战队创始人兼指挥，拥有丰富的比赛经验和出色的战术意识。"
