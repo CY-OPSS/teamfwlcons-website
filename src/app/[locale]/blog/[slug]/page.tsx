@@ -95,7 +95,7 @@ export default async function BlogPostPage({
       )}
 
       {/* Comments */}
-      <CommentSection postSlug={slug} />
+      <CommentSection postSlug={slug} locale={locale} />
     </article>
   );
 }

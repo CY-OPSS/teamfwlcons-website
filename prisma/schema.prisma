@@ -13,14 +13,16 @@ enum Role {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String?
-  image     String?
-  role      Role      @default(VISITOR)
-  comments  Comment[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  email        String?   @unique
+  name         String?
+  image        String?
+  role         Role      @default(VISITOR)
+  comments     Comment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Comment {
@@ -28,7 +30,7 @@ model Comment {
   content   String
   postSlug  String
   locale    String   @default("zh")
-  approved  Boolean  @default(false)
+  approved  Boolean  @default(true)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -39,10 +41,10 @@ model Comment {
 }
 
 model ViewStat {
-  id    String @id @default(cuid())
-  slug  String
+  id     String @id @default(cuid())
+  slug   String
   locale String @default("zh")
-  views Int    @default(0)
+  views  Int    @default(0)
 
   @@unique([slug, locale])
 }

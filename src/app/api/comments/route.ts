@@ -1,71 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import GithubProvider from "next-auth/providers/github";
-
-const authOptions = {
-  providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_ID ?? "",
-      clientSecret: process.env.GITHUB_SECRET ?? "",
-    }),
-  ],
-};
-
-export async function POST(request: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const { content, postSlug, locale } = await request.json();
-
-    if (!content || !postSlug) {
-      return NextResponse.json(
-        { error: "Missing content or postSlug" },
-        { status: 400 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email! },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    const comment = await prisma.comment.create({
-      data: {
-        content,
-        postSlug,
-        locale: locale || "zh",
-        userId: user.id,
-        approved: user.role === "ADMIN",
-      },
-      include: {
-        user: {
-          select: { name: true, image: true },
-        },
-      },
-    });
-
-    return NextResponse.json(comment);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to create comment" },
-      { status: 500 }
-    );
-  }
-}
+import { getSession } from "@/lib/session";
 
 export async function GET(request: Request) {
   try {
@@ -88,16 +23,69 @@ export async function GET(request: Request) {
       },
       include: {
         user: {
-          select: { name: true, image: true },
+          select: { username: true, name: true, image: true },
         },
       },
       orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(comments);
-  } catch {
+  } catch (error) {
+    console.error("Get comments error:", error);
     return NextResponse.json(
       { error: "Failed to get comments" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: "请先登录后再评论" },
+        { status: 401 }
+      );
+    }
+
+    const { content, postSlug, locale } = await request.json();
+    const text = typeof content === "string" ? content.trim() : "";
+
+    if (!text || !postSlug) {
+      return NextResponse.json(
+        { error: "评论内容不能为空" },
+        { status: 400 }
+      );
+    }
+
+    if (text.length > 2000) {
+      return NextResponse.json(
+        { error: "评论过长（最多2000字）" },
+        { status: 400 }
+      );
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        content: text,
+        postSlug,
+        locale: locale || "zh",
+        userId: session.userId,
+        approved: true,
+      },
+      include: {
+        user: {
+          select: { username: true, name: true, image: true },
+        },
+      },
+    });
+
+    return NextResponse.json(comment);
+  } catch (error) {
+    console.error("Create comment error:", error);
+    return NextResponse.json(
+      { error: "发表评论失败，请确认数据库已配置" },
       { status: 500 }
     );
   }

@@ -1,94 +1,101 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const USERS_FILE = path.join(process.cwd(), "data", "users.json");
-
-interface User {
-  id: string;
-  username: string;
-  password: string;
-  createdAt: string;
-}
-
-function getUsers(): User[] {
-  try {
-    if (!fs.existsSync(USERS_FILE)) {
-      return [];
-    }
-    const data = fs.readFileSync(USERS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-function saveUsers(users: User[]) {
-  const dir = path.dirname(USERS_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import {
+  clearSessionCookie,
+  createSessionToken,
+  getSession,
+  setSessionCookie,
+} from "@/lib/session";
 
 export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
+    const trimmed = typeof username === "string" ? username.trim() : "";
 
-    if (!username || !password) {
+    if (!trimmed || !password) {
       return NextResponse.json(
         { error: "请填写用户名和密码" },
         { status: 400 }
       );
     }
 
-    if (username.length < 3) {
+    if (trimmed.length < 3) {
       return NextResponse.json(
         { error: "用户名至少3个字符" },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
+    if (typeof password !== "string" || password.length < 6) {
       return NextResponse.json(
         { error: "密码至少6个字符" },
         { status: 400 }
       );
     }
 
-    const users = getUsers();
+    const existing = await prisma.user.findUnique({
+      where: { username: trimmed },
+    });
 
-    // Check if user already exists
-    const existingUser = users.find((u) => u.username === username);
-    if (existingUser) {
+    if (existing) {
       return NextResponse.json(
         { error: "用户名已存在，请直接登录" },
-        { status: 400 }
+        { status: 409 }
       );
     }
 
-    // Create new user
-    const newUser: User = {
-      id: Date.now().toString(),
-      username,
-      password, // In production, hash this password
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-    saveUsers(users);
-
-    return NextResponse.json({
-      user: {
-        id: newUser.id,
-        username: newUser.username,
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        username: trimmed,
+        passwordHash,
+        name: trimmed,
       },
     });
-  } catch (err) {
-    console.error("Registration error:", err);
+
+    const token = await createSessionToken({
+      userId: user.id,
+      username: user.username,
+      role: user.role,
+    });
+
+    const response = NextResponse.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
+      created: true,
+    });
+    setSessionCookie(response, token);
+    return response;
+  } catch (error) {
+    console.error("Register error:", error);
     return NextResponse.json(
-      { error: "注册失败，请重试" },
+      { error: "注册失败，请确认数据库已配置" },
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ user: null });
+  }
+
+  return NextResponse.json({
+    user: {
+      id: session.userId,
+      username: session.username,
+      role: session.role,
+    },
+  });
+}
+
+export async function DELETE() {
+  const response = NextResponse.json({ ok: true });
+  clearSessionCookie(response);
+  return response;
 }
