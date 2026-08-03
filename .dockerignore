@@ -7,7 +7,9 @@ node_modules
 !.env.hk.example
 scripts/5e/players.private.json
 scripts/5e/.env
-**/*.md
+# Ignore docs markdown, but keep site content (blog/docs) for the image build
+*.md
+!src/content/**/*.md
 !docs/hk-mirror-deploy.md
 agent-transcripts
 .cursor

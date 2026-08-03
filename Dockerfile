@@ -31,6 +31,8 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Blog/docs/team/about/stats are read from disk at runtime
+COPY --from=builder --chown=nextjs:nodejs /app/src/content ./src/content
 
 USER nextjs
 EXPOSE 3000
