@@ -34,7 +34,7 @@ members:
     role: "Entry Fragger"
     isCaptain: false
     avatar: "/images/team/player2.jpg"
-    bio: "突破手，以激进的打法和快速的反应著称。"
+    bio: "突破手，以激进的打法和快速的反应著称。 "
     fiveEUrl: ""
     social:
       steam: "https://steamcommunity.com/id/AQAQAQSWQSQS/"
