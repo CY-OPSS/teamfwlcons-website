@@ -3,7 +3,13 @@
     "TeamFwlcons 由一群热爱 Counter-Strike 的同学组成。",
     "我们致力于培养团队协作精神，提升个人技术水平。"
   ],
-  "honors": [],
+  "honors": [
+    {
+      "title": "大桥Major",
+      "year": "2026",
+      "icon": "🏆冠军"
+    }
+  ],
   "contacts": [
     {
       "label": "Steam",
