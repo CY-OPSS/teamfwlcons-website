@@ -6,14 +6,14 @@ members:
     isCaptain: true
     avatar: "/images/team/captain.jpg"
     bio: "战队创始人兼指挥，拥有丰富的比赛经验和出色的战术意识。"
+    fiveEUrl: ""
     social:
-      telegram: "https://t.me/"
       steam: "https://steamcommunity.com/id/"
+      telegram: "https://t.me/"
     stats:
       rating: "1.25"
       headshot: "45%"
       winRate: "68%"
-    fiveEUrl: ""
 
   - id: "player1"
     name: "rune"
@@ -21,13 +21,13 @@ members:
     isCaptain: false
     avatar: "/images/team/player1.jpg"
     bio: "主狙击手，精准的枪法和冷静的判断是团队的核心火力。"
+    fiveEUrl: ""
     social:
       steam: "https://steamcommunity.com/id/"
     stats:
       rating: "1.18"
       headshot: "52%"
       winRate: "65%"
-    fiveEUrl: ""
 
   - id: "player2"
     name: "Nioon"
@@ -35,13 +35,13 @@ members:
     isCaptain: false
     avatar: "/images/team/player2.jpg"
     bio: "突破手，以激进的打法和快速的反应著称。"
+    fiveEUrl: ""
     social:
-      steam: "https://steamcommunity.com/id/"
+      steam: "https://steamcommunity.com/id/AQAQAQSWQSQS/"
     stats:
       rating: "1.12"
       headshot: "48%"
       winRate: "62%"
-    fiveEUrl: ""
 
   - id: "player3"
     name: "ddweiii"
@@ -49,13 +49,13 @@ members:
     isCaptain: false
     avatar: "/images/team/player3.jpg"
     bio: "辅助选手，擅长道具使用和信息收集。"
+    fiveEUrl: ""
     social:
       steam: "https://steamcommunity.com/id/"
     stats:
       rating: "1.08"
       headshot: "42%"
       winRate: "60%"
-    fiveEUrl: ""
 
   - id: "player4"
     name: "oligei"
@@ -63,13 +63,13 @@ members:
     isCaptain: false
     avatar: "/images/team/player4.jpg"
     bio: "自由人，灵活多变的打法为团队创造空间。"
+    fiveEUrl: ""
     social:
       steam: "https://steamcommunity.com/id/"
     stats:
       rating: "1.05"
       headshot: "40%"
       winRate: "58%"
-    fiveEUrl: ""
 
   - id: "coach"
     name: "Lucas"
@@ -77,7 +77,7 @@ members:
     isCaptain: false
     avatar: "/images/team/coach.jpg"
     bio: "资深教练，专注于战术研究和团队配合训练。"
+    fiveEUrl: ""
     social:
       steam: "https://steamcommunity.com/id/"
     stats: {}
-    fiveEUrl: ""
