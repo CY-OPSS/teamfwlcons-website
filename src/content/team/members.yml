@@ -63,7 +63,7 @@ members:
       winRate: "58%"
 
   - id: "coach"
-    name: "Morgan"
+    name: "Lucas"
     role: "Coach"
     isCaptain: false
     bio: "资深教练，专注于战术研究和团队配合训练。"
