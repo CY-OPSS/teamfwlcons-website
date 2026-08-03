@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.vercel
+.env
+.env.*
+!.env.hk.example
+scripts/5e/players.private.json
+scripts/5e/.env
+**/*.md
+!docs/hk-mirror-deploy.md
+agent-transcripts
+.cursor
+*.log
+Dockerfile*
+docker-compose*.yml

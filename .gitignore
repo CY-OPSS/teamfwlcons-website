@@ -1,6 +1,7 @@
 # Environment
 .env.local
 .env*.local
+.env.hk
 
 # 5E private mapping / local secrets (never commit)
 scripts/5e/players.private.json
