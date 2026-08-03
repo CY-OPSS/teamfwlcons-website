@@ -71,6 +71,7 @@ members:
     name: "Lucas"
     role: "Coach"
     isCaptain: false
+    avatar: "/images/team/coach.jpg"
     bio: "资深教练，专注于战术研究和团队配合训练。"
     social:
       twitter: "https://twitter.com"
