@@ -1,5 +1,46 @@
 {
-  "updatedAt": null,
+  "updatedAt": "2026-08-03T04:28:07+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
-  "players": {}
+  "players": {
+    "captain": {
+      "memberId": "captain",
+      "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
+      "source": "none",
+      "syncedAt": "2026-08-03T04:27:50+00:00",
+      "stats": {},
+      "error": "sync_failed"
+    },
+    "player1": {
+      "memberId": "player1",
+      "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
+      "source": "none",
+      "syncedAt": "2026-08-03T04:27:54+00:00",
+      "stats": {},
+      "error": "sync_failed"
+    },
+    "player2": {
+      "memberId": "player2",
+      "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
+      "source": "none",
+      "syncedAt": "2026-08-03T04:27:58+00:00",
+      "stats": {},
+      "error": "sync_failed"
+    },
+    "player3": {
+      "memberId": "player3",
+      "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
+      "source": "none",
+      "syncedAt": "2026-08-03T04:28:02+00:00",
+      "stats": {},
+      "error": "sync_failed"
+    },
+    "player4": {
+      "memberId": "player4",
+      "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
+      "source": "none",
+      "syncedAt": "2026-08-03T04:28:06+00:00",
+      "stats": {},
+      "error": "sync_failed"
+    }
+  }
 }
