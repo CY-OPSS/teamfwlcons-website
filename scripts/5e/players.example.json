@@ -1,0 +1,11 @@
+[
+  {
+    "memberId": "captain",
+    "domain": "your-5e-domain-or-uuid",
+    "profileUrl": "https://arena.5eplay.com/data/player/your-5e-domain-or-uuid"
+  },
+  {
+    "memberId": "player1",
+    "domain": "another-player-id"
+  }
+]

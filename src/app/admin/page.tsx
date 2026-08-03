@@ -1836,7 +1836,8 @@ ${doc.content}`;
                       placeholder="https://arena.5eplay.com/data/player/你的ID"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      5E 无官方公开 API，战绩目前需手动填写；可先保存主页链接。
+                      前台展示用公开链接。自动同步的玩家 ID / Token 请放到
+                      GitHub Secrets（见 docs/5e-stats-setup.md），不要写进仓库。
                     </p>
                   </div>
                   <div>

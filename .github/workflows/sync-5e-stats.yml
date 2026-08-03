@@ -1,0 +1,49 @@
+name: Sync 5E stats
+
+on:
+  schedule:
+    # Every 6 hours (UTC)
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-5e-stats
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r scripts/5e/requirements.txt
+
+      - name: Sync 5E stats
+        env:
+          # Private: GitHub Secrets only — never commit these values
+          FIVE_E_PLAYERS_JSON: ${{ secrets.FIVE_E_PLAYERS_JSON }}
+          FIVE_E_TOKEN: ${{ secrets.FIVE_E_TOKEN }}
+          FIVE_E_COOKIE: ${{ secrets.FIVE_E_COOKIE }}
+        run: python scripts/5e/sync_stats.py
+
+      - name: Commit updated stats JSON
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/stats/5e.json
+          if git diff --staged --quiet; then
+            echo "No stats changes"
+          else
+            git commit -m "chore: sync 5E display stats"
+            git push
+          fi
