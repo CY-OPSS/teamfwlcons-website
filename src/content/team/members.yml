@@ -4,6 +4,7 @@ members:
     name: "Facwink"
     role: "In-game Leader"
     isCaptain: false
+    avatar: "/images/team/captain.jpg"
     bio: "战队创始人兼指挥，拥有丰富的比赛经验和出色的战术意识。"
     social:
       steam: "https://steamcommunity.com"
