@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getBlogPost, getBlogPosts } from "@/lib/blog";
+import { markdownToHtml } from "@/lib/markdown";
 import { ViewCounter } from "@/components/ViewCounter";
 import { CommentSection } from "@/components/CommentSection";
 
@@ -21,6 +22,8 @@ export default async function BlogPostPage({
   if (!post) {
     notFound();
   }
+
+  const contentHtml = await markdownToHtml(post.content);
 
   return (
     <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -75,7 +78,7 @@ export default async function BlogPostPage({
       {/* Content */}
       <div
         className="prose prose-lg max-w-none"
-        dangerouslySetInnerHTML={{ __html: post.content }}
+        dangerouslySetInnerHTML={{ __html: contentHtml }}
       />
 
       {/* Tags */}

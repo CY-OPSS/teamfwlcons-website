@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getDocPage, getDocSections } from "@/lib/docs";
+import { markdownToHtml } from "@/lib/markdown";
 import Link from "next/link";
 
 export function generateStaticParams() {
@@ -24,6 +25,7 @@ export default async function DocPage({
     notFound();
   }
 
+  const contentHtml = await markdownToHtml(doc.content);
   const sections = getDocSections(locale);
 
   return (
@@ -72,8 +74,8 @@ export default async function DocPage({
           </div>
 
           <div
-            className="prose prose-lg dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: doc.content }}
+            className="prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
           />
         </article>
       </div>

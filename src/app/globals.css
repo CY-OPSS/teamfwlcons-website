@@ -39,3 +39,87 @@ pre {
 code {
   font-family: "Fira Code", "Cascadia Code", monospace;
 }
+
+/* Markdown content */
+.prose {
+  color: #374151;
+  line-height: 1.75;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: #111827;
+  font-weight: 700;
+  margin-top: 1.75em;
+  margin-bottom: 0.75em;
+  line-height: 1.25;
+}
+
+.prose h1 {
+  font-size: 2rem;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+}
+
+.prose h3 {
+  font-size: 1.25rem;
+}
+
+.prose p {
+  margin: 1em 0;
+}
+
+.prose ul,
+.prose ol {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li {
+  margin: 0.35em 0;
+}
+
+.prose a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.prose strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.prose blockquote {
+  border-left: 4px solid #d1d5db;
+  padding-left: 1em;
+  color: #6b7280;
+  margin: 1.25em 0;
+}
+
+.prose pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  margin: 1.25em 0;
+}
+
+.prose code {
+  font-size: 0.9em;
+}
+
+.prose :not(pre) > code {
+  background: #f3f4f6;
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+}
