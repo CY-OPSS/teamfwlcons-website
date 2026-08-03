@@ -3,11 +3,10 @@ import path from "path";
 
 export interface FiveEPlayerStats {
   rating?: string;
-  headshot?: string;
   winRate?: string;
   kd?: string;
   adr?: string;
-  /** 5E 平台分 / PLR 等，前台展示为 5ESS */
+  /** Homepage "5E SS" (API field rating3) */
   elo?: string;
 }
 

@@ -30,7 +30,6 @@ export default async function TeamPage() {
             const live = fiveE.players[member.id];
             const liveStats = live?.stats || {};
             const rating = liveStats.rating || member.stats.rating;
-            const headshot = liveStats.headshot || member.stats.headshot;
             const winRate = liveStats.winRate || member.stats.winRate;
             const kd = liveStats.kd;
             const adr = liveStats.adr;
@@ -40,12 +39,9 @@ export default async function TeamPage() {
               (live?.profileUrl && !live.profileUrl.includes("your-5e")
                 ? live.profileUrl
                 : undefined);
-            const hasStats = Boolean(
-              rating || headshot || winRate || kd || adr || fiveEss
-            );
+            const hasStats = Boolean(rating || winRate || kd || adr || fiveEss);
             const hasLiveStats = Boolean(
               liveStats.rating ||
-                liveStats.headshot ||
                 liveStats.winRate ||
                 liveStats.kd ||
                 liveStats.adr ||
@@ -96,12 +92,12 @@ export default async function TeamPage() {
                           <div className="text-xs text-neutral-500">Rating</div>
                         </div>
                       )}
-                      {headshot && (
+                      {fiveEss && (
                         <div className="text-center">
-                          <div className="text-lg font-bold text-green-600">
-                            {headshot}
+                          <div className="text-lg font-bold text-orange-600">
+                            {fiveEss}
                           </div>
-                          <div className="text-xs text-neutral-500">HS%</div>
+                          <div className="text-xs text-neutral-500">5E SS</div>
                         </div>
                       )}
                       {winRate && (
@@ -126,14 +122,6 @@ export default async function TeamPage() {
                             {adr}
                           </div>
                           <div className="text-xs text-neutral-500">ADR</div>
-                        </div>
-                      )}
-                      {fiveEss && (
-                        <div className="text-center">
-                          <div className="text-lg font-bold text-orange-600">
-                            {fiveEss}
-                          </div>
-                          <div className="text-xs text-neutral-500">5ESS</div>
                         </div>
                       )}
                     </div>

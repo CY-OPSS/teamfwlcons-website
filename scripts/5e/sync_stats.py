@@ -264,32 +264,34 @@ def format_num(value: Any, digits: int = 2) -> str | None:
         return str(value)
 
 
+def format_signed(value: Any, digits: int = 2) -> str | None:
+    if value in (None, "", "-"):
+        return None
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    text = f"{num:.{digits}f}"
+    return f"+{text}" if num > 0 else text
+
+
 def parse_v3_home(data: dict[str, Any]) -> dict[str, str]:
+    """
+    Map fields to the personal homepage season panel:
+    Rating -> season_data.rating
+    5E SS  -> season_data.rating3
+    ADR    -> season_data.adr
+    K/D    -> kill / death
+    胜率   -> per_win_match
+    """
     stats: dict[str, str] = {}
     season = data.get("season_data") or {}
-    career = data.get("career") or {}
 
-    rating = (
-        season.get("avg_rating")
-        or season.get("rating")
-        or season.get("avg_rating3")
-    )
-    if rating not in (None, "", "-", 0, 0.0):
+    rating = season.get("rating")
+    if rating not in (None, "", "-"):
         stats["rating"] = format_num(rating, 2) or str(rating)
 
-    hs = pct_text(season.get("per_headshot") or season.get("avg_hs"))
-    if hs:
-        stats["headshot"] = hs
-
     win = pct_text(season.get("per_win_match"))
-    if not win:
-        total = career.get("match_total")
-        wins = career.get("match_win")
-        try:
-            if total and float(total) > 0 and wins is not None:
-                win = f"{round(float(wins) / float(total) * 100)}%"
-        except (TypeError, ValueError):
-            win = None
     if win:
         stats["winRate"] = win
 
@@ -303,13 +305,14 @@ def parse_v3_home(data: dict[str, Any]) -> dict[str, str]:
     except (TypeError, ValueError):
         pass
 
-    adr = season.get("adr") or season.get("avg_adr")
-    if adr not in (None, "", "-", 0, 0.0):
-        stats["adr"] = format_num(adr, 1) or str(adr)
+    adr = season.get("adr")
+    if adr not in (None, "", "-"):
+        stats["adr"] = format_num(adr, 2) or str(adr)
 
-    elo = career.get("elo") or season.get("elo")
-    if elo not in (None, "", "-"):
-        stats["elo"] = format_num(elo, 0) or str(elo)
+    # Homepage "5E SS" is rating3, not career ladder elo.
+    five_ss = format_signed(season.get("rating3"), 2)
+    if five_ss:
+        stats["elo"] = five_ss
 
     return stats
 
@@ -345,13 +348,9 @@ def parse_html_stats(html: str) -> dict[str, str]:
         "k/d": "kd",
         "局均伤害": "adr",
         "adr": "adr",
-        "爆头率": "headshot",
-        "hs%": "headshot",
         "胜率": "winRate",
         "winrate": "winRate",
-        "plr": "elo",
-        "elo": "elo",
-        "天梯分": "elo",
+        "5e ss": "elo",
         "5ess": "elo",
     }
 
@@ -433,44 +432,26 @@ def fetch_from_matches(session: requests.Session, uuid: str) -> dict[str, str]:
         return {}
 
     ratings: list[float] = []
+    rating3s: list[float] = []
     adrs: list[float] = []
-    heads: list[float] = []
     kills = 0
     deaths = 0
     wins = 0
-    elos: list[float] = []
 
     for match in matches:
         try:
             if match.get("rating") not in (None, "", "-"):
                 ratings.append(float(match["rating"]))
+            if match.get("rating3") not in (None, "", "-"):
+                rating3s.append(float(match["rating3"]))
             if match.get("adr") not in (None, "", "-"):
                 adrs.append(float(match["adr"]))
-            hs = match.get("per_headshot")
-            if hs not in (None, "", "-"):
-                num = float(hs)
-                if num <= 1:
-                    num *= 100
-                heads.append(num)
             if match.get("kill") is not None:
                 kills += int(match.get("kill") or 0)
             if match.get("death") is not None:
                 deaths += int(match.get("death") or 0)
             if match.get("is_win"):
                 wins += 1
-            elo_val = match.get("level_elo") or match.get("origin_elo")
-            level_info = match.get("level_info") or {}
-            if isinstance(level_info, dict):
-                elo_val = elo_val or level_info.get("elo") or level_info.get("level_elo")
-                try:
-                    origin = float(level_info.get("origin_elo") or 0)
-                    change = float(match.get("change_elo") or 0)
-                    if origin or change:
-                        elo_val = origin + change
-                except (TypeError, ValueError):
-                    pass
-            if elo_val not in (None, "", "-"):
-                elos.append(float(elo_val))
         except (TypeError, ValueError):
             continue
 
@@ -478,16 +459,16 @@ def fetch_from_matches(session: requests.Session, uuid: str) -> dict[str, str]:
     if ratings:
         stats["rating"] = f"{sum(ratings) / len(ratings):.2f}"
     if adrs:
-        stats["adr"] = f"{sum(adrs) / len(adrs):.1f}"
-    if heads:
-        stats["headshot"] = f"{sum(heads) / len(heads):.0f}%"
+        stats["adr"] = f"{sum(adrs) / len(adrs):.2f}"
     if deaths > 0:
         stats["kd"] = f"{kills / deaths:.2f}"
     elif kills > 0:
         stats["kd"] = str(kills)
     stats["winRate"] = f"{round(wins / len(matches) * 100)}%"
-    if elos:
-        stats["elo"] = f"{elos[-1]:.0f}"
+    if rating3s:
+        signed = format_signed(sum(rating3s) / len(rating3s), 2)
+        if signed:
+            stats["elo"] = signed
     print(f"  match/list aggregated {len(matches)} matches")
     return stats
 
@@ -516,7 +497,7 @@ def public_player_record(
         "syncedAt": utc_now(),
         "stats": {
             key: stats[key]
-            for key in ("rating", "headshot", "winRate", "kd", "adr", "elo")
+            for key in ("rating", "winRate", "kd", "adr", "elo")
             if stats.get(key)
         },
     }

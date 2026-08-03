@@ -66,7 +66,7 @@ python scripts/5e/sync_stats.py
 
 ## 说明
 
-- 同步优先走 `gate.5eplay.com/.../v3/player/home`（展示 Rating / HS% / 胜率 / K/D / ADR / 5ESS）。
+- 同步优先走 `gate.5eplay.com/.../v3/player/home`，字段对齐个人主页当前赛季面板：Rating、`5E SS`（API `rating3`）、胜率、K/D、ADR。
 - 非官方接口，5E 改版后可能失效；失败时会保留上一份成功数据。
 - 前台标注「非实时」。
 - 不要把 Token / 玩家映射写进 `members.yml` 或提交到 Git。
