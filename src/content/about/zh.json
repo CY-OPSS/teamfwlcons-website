@@ -1,0 +1,49 @@
+{
+  "history": [
+    "TeamFwlcons 最初由一群热爱 Counter-Strike 的同学组成。经过不断的发展和壮大，我们已经成为一支极具竞争力的 CS2 战队。",
+    "我们致力于培养团队协作精神，提升个人技术水平，并在各类校际和区域比赛中争取优异成绩。"
+  ],
+  "honors": [
+    {
+      "title": "校际 CS2 联赛 冠军",
+      "year": "2025",
+      "icon": "🏆"
+    },
+    {
+      "title": "区域电竞锦标赛 亚军",
+      "year": "2024",
+      "icon": "🥈"
+    },
+    {
+      "title": "校内电竞节 季军",
+      "year": "2024",
+      "icon": "🥉"
+    }
+  ],
+  "contacts": [
+    {
+      "label": "Discord",
+      "detail": "加入我们的服务器",
+      "url": "#",
+      "icon": "💬"
+    },
+    {
+      "label": "Telegram",
+      "detail": "联系队长",
+      "url": "#",
+      "icon": "✈️"
+    },
+    {
+      "label": "Steam",
+      "detail": "Steam 组",
+      "url": "#",
+      "icon": "🎮"
+    },
+    {
+      "label": "Email",
+      "detail": "team@fwlcons.gg",
+      "url": "mailto:team@fwlcons.gg",
+      "icon": "📧"
+    }
+  ]
+}

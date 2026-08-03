@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { TEAM_ROLES, formatTeamRole } from "@/lib/team-roles";
 
-type Tab = "posts" | "team" | "comments" | "stats";
+type Tab = "posts" | "docs" | "about" | "team" | "comments" | "stats";
 
 interface Post {
   slug: string;
@@ -12,6 +12,34 @@ interface Post {
   category: string;
   content: string;
   sha: string;
+}
+
+interface DocItem {
+  slug: string;
+  title: string;
+  description: string;
+  order: number;
+  content: string;
+  sha: string;
+}
+
+interface AboutHonor {
+  title: string;
+  year: string;
+  icon: string;
+}
+
+interface AboutContact {
+  label: string;
+  detail: string;
+  url: string;
+  icon: string;
+}
+
+interface AboutData {
+  history: string[];
+  honors: AboutHonor[];
+  contacts: AboutContact[];
 }
 
 interface TeamMember {
@@ -49,6 +77,20 @@ const REPO = "CY-OPSS/teamfwlcons-website";
 const DEPLOY_HOOK =
   "https://api.vercel.com/v1/integrations/deploy/prj_6L84y6UWCv4NZhJl2lXxQbpX9ZV1/hzXqDN3s2A";
 const MEMBERS_PATH = "src/content/team/members.yml";
+const DOCS_DIR = "src/content/docs/zh";
+const ABOUT_PATH = "src/content/about/zh.json";
+
+function emptyAbout(): AboutData {
+  return { history: [""], honors: [], contacts: [] };
+}
+
+function slugifyDoc(title: string) {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-\u4e00-\u9fa5]/g, "");
+}
 
 function encodeBase64(text: string) {
   return btoa(unescape(encodeURIComponent(text)));
@@ -157,6 +199,19 @@ export default function AdminPage() {
     content: "",
   });
 
+  const [docs, setDocs] = useState<DocItem[]>([]);
+  const [editingDoc, setEditingDoc] = useState<DocItem | null>(null);
+  const [newDoc, setNewDoc] = useState({
+    slug: "",
+    title: "",
+    description: "",
+    order: 1,
+    content: "",
+  });
+
+  const [about, setAbout] = useState<AboutData>(emptyAbout());
+  const [aboutSha, setAboutSha] = useState("");
+
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [membersSha, setMembersSha] = useState("");
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
@@ -176,6 +231,8 @@ export default function AdminPage() {
   const bootstrap = async (t: string) => {
     await Promise.all([
       loadPosts(t),
+      loadDocs(t),
+      loadAbout(t),
       loadMembers(t),
       loadComments(t),
       loadStats(t),
@@ -194,6 +251,10 @@ export default function AdminPage() {
     setIsLoggedIn(false);
     setToken("");
     setPosts([]);
+    setDocs([]);
+    setEditingDoc(null);
+    setAbout(emptyAbout());
+    setAboutSha("");
     setMembers([]);
     setComments([]);
     setStats(null);
@@ -399,6 +460,290 @@ ${editing.content}`;
       }
     } catch (err) {
       setMessage(`删除失败: ${err}`);
+    }
+  };
+
+  const loadDocs = async (t: string) => {
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}`,
+        { headers: authHeaders(t) }
+      );
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        setDocs([]);
+        return;
+      }
+
+      const docList = await Promise.all(
+        data
+          .filter((f: { name: string; type?: string }) =>
+            f.name.endsWith(".md")
+          )
+          .map(async (f: { name: string; url: string }) => {
+            const contentRes = await fetch(f.url, {
+              headers: authHeaders(t),
+            });
+            const contentData = await contentRes.json();
+            const content = decodeBase64(contentData.content);
+            const match = content.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
+            let title = f.name.replace(/\.md$/, "");
+            let description = "";
+            let order = 0;
+            let body = content;
+            if (match) {
+              const frontmatter = match[1];
+              body = match[2].trim();
+              const titleMatch = frontmatter.match(/title:\s*"?(.+?)"?\s*$/m);
+              const descMatch = frontmatter.match(
+                /description:\s*"?(.+?)"?\s*$/m
+              );
+              const orderMatch = frontmatter.match(/order:\s*"?(\d+)"?\s*$/m);
+              if (titleMatch) title = titleMatch[1];
+              if (descMatch) description = descMatch[1];
+              if (orderMatch) order = Number(orderMatch[1]) || 0;
+            }
+            return {
+              slug: f.name.replace(/\.md$/, ""),
+              title,
+              description,
+              order,
+              content: body,
+              sha: contentData.sha as string,
+            } satisfies DocItem;
+          })
+      );
+      setDocs(docList.sort((a, b) => a.order - b.order));
+    } catch {
+      setMessage("加载文档失败");
+    }
+  };
+
+  const buildDocMarkdown = (doc: {
+    title: string;
+    description: string;
+    order: number;
+    content: string;
+  }) => `---
+title: "${doc.title.replace(/"/g, '\\"')}"
+description: "${doc.description.replace(/"/g, '\\"')}"
+order: ${Number(doc.order) || 0}
+---
+
+${doc.content}`;
+
+  const createDoc = async () => {
+    if (!newDoc.title || !newDoc.content) {
+      setMessage("请填写文档标题和内容");
+      return;
+    }
+    const slug = (newDoc.slug.trim() || slugifyDoc(newDoc.title)).replace(
+      /^\/+|\/+$/g,
+      ""
+    );
+    if (!slug) {
+      setMessage("请填写有效的文档 slug");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}/${slug}.md`,
+        {
+          method: "PUT",
+          headers: {
+            ...authHeaders(token),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `feat: add doc "${newDoc.title}"`,
+            content: encodeBase64(buildDocMarkdown(newDoc)),
+          }),
+        }
+      );
+      if (res.ok) {
+        setMessage("文档创建成功，正在自动部署...");
+        setNewDoc({
+          slug: "",
+          title: "",
+          description: "",
+          order: docs.length + 1,
+          content: "",
+        });
+        await loadDocs(token);
+        await triggerDeploy();
+      } else {
+        const err = await res.json();
+        setMessage(`创建文档失败: ${err.message || "请检查权限"}`);
+      }
+    } catch {
+      setMessage("创建文档失败，请重试");
+    }
+  };
+
+  const updateDoc = async () => {
+    if (!editingDoc) return;
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}/${editingDoc.slug}.md`,
+        {
+          method: "PUT",
+          headers: {
+            ...authHeaders(token),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `update: edit doc "${editingDoc.title}"`,
+            content: encodeBase64(buildDocMarkdown(editingDoc)),
+            sha: editingDoc.sha,
+          }),
+        }
+      );
+      if (res.ok) {
+        setMessage("文档更新成功，正在自动部署...");
+        setEditingDoc(null);
+        await loadDocs(token);
+        await triggerDeploy();
+      } else {
+        const err = await res.json();
+        setMessage(`更新文档失败: ${err.message || "未知错误"}`);
+      }
+    } catch {
+      setMessage("更新文档失败，请重试");
+    }
+  };
+
+  const deleteDoc = async (doc: DocItem) => {
+    if (!confirm(`确定要删除文档 "${doc.title}" 吗？`)) return;
+    try {
+      const fileRes = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}/${doc.slug}.md`,
+        { headers: authHeaders(token) }
+      );
+      const fileData = await fileRes.json();
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}/${doc.slug}.md`,
+        {
+          method: "DELETE",
+          headers: {
+            ...authHeaders(token),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `delete: remove doc "${doc.title}"`,
+            sha: fileData.sha,
+          }),
+        }
+      );
+      if (res.ok) {
+        setMessage("文档已删除，正在自动部署...");
+        setEditingDoc(null);
+        await loadDocs(token);
+        await triggerDeploy();
+      } else {
+        const err = await res.json();
+        setMessage(`删除文档失败: ${err.message || "未知错误"}`);
+      }
+    } catch (err) {
+      setMessage(`删除文档失败: ${err}`);
+    }
+  };
+
+  const importDocFile = async (file: File) => {
+    const text = await file.text();
+    const match = text.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
+    let title = file.name.replace(/\.md$/i, "");
+    let description = "";
+    let order = docs.length + 1;
+    let content = text;
+    let slug = slugifyDoc(title);
+    if (match) {
+      const frontmatter = match[1];
+      content = match[2].trim();
+      const titleMatch = frontmatter.match(/title:\s*"?(.+?)"?\s*$/m);
+      const descMatch = frontmatter.match(/description:\s*"?(.+?)"?\s*$/m);
+      const orderMatch = frontmatter.match(/order:\s*"?(\d+)"?\s*$/m);
+      if (titleMatch) title = titleMatch[1];
+      if (descMatch) description = descMatch[1];
+      if (orderMatch) order = Number(orderMatch[1]) || order;
+    }
+    slug = slugifyDoc(title) || slug;
+    setEditingDoc(null);
+    setNewDoc({ slug, title, description, order, content });
+    setMessage(`已导入文件 ${file.name}，确认后点击发布`);
+  };
+
+  const loadAbout = async (t: string) => {
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${ABOUT_PATH}`,
+        { headers: authHeaders(t) }
+      );
+      const data = await res.json();
+      if (!data.content) {
+        setAbout(emptyAbout());
+        setAboutSha("");
+        return;
+      }
+      const raw = JSON.parse(decodeBase64(data.content)) as Partial<AboutData>;
+      setAboutSha(data.sha);
+      setAbout({
+        history: Array.isArray(raw.history) ? raw.history.map(String) : [""],
+        honors: Array.isArray(raw.honors)
+          ? raw.honors.map((item) => ({
+              title: String(item?.title || ""),
+              year: String(item?.year || ""),
+              icon: String(item?.icon || "🏆"),
+            }))
+          : [],
+        contacts: Array.isArray(raw.contacts)
+          ? raw.contacts.map((item) => ({
+              label: String(item?.label || ""),
+              detail: String(item?.detail || ""),
+              url: String(item?.url || "#"),
+              icon: String(item?.icon || "🔗"),
+            }))
+          : [],
+      });
+    } catch {
+      setMessage("加载关于页失败");
+    }
+  };
+
+  const saveAbout = async () => {
+    try {
+      const payload: AboutData = {
+        history: about.history.map((p) => p.trim()).filter(Boolean),
+        honors: about.honors.filter((h) => h.title.trim()),
+        contacts: about.contacts.filter((c) => c.label.trim()),
+      };
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${ABOUT_PATH}`,
+        {
+          method: "PUT",
+          headers: {
+            ...authHeaders(token),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: "update: edit about page content",
+            content: encodeBase64(JSON.stringify(payload, null, 2) + "\n"),
+            ...(aboutSha ? { sha: aboutSha } : {}),
+          }),
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setAboutSha(data.content.sha);
+        setAbout(payload);
+        setMessage("关于页已保存，正在自动部署...");
+        await triggerDeploy();
+      } else {
+        const err = await res.json();
+        setMessage(`保存关于页失败: ${err.message || "未知错误"}`);
+      }
+    } catch {
+      setMessage("保存关于页失败，请重试");
     }
   };
 
@@ -697,6 +1042,8 @@ ${editing.content}`;
           {(
             [
               ["posts", "文章"],
+              ["docs", "文档"],
+              ["about", "关于页"],
               ["team", "团队成员"],
               ["comments", "评论管理"],
               ["stats", "访问统计"],
@@ -854,6 +1201,425 @@ ${editing.content}`;
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {tab === "docs" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-bold mb-4">
+                已有文档 ({docs.length})
+              </h2>
+              {docs.length === 0 ? (
+                <p className="text-gray-500">暂无文档</p>
+              ) : (
+                <ul className="space-y-3">
+                  {docs.map((doc) => (
+                    <li
+                      key={doc.slug}
+                      className={`p-4 rounded border cursor-pointer transition-colors ${
+                        editingDoc?.slug === doc.slug
+                          ? "bg-blue-50 border-blue-300"
+                          : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                      }`}
+                      onClick={() => setEditingDoc(doc)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{doc.title}</div>
+                          <div className="text-sm text-gray-500 mt-1">
+                            {doc.slug}.md · order {doc.order}
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteDoc(doc);
+                          }}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold">
+                  {editingDoc ? "编辑文档" : "新建 / 上传文档"}
+                </h2>
+                <label className="text-sm text-blue-600 hover:underline cursor-pointer">
+                  上传 .md
+                  <input
+                    type="file"
+                    accept=".md,text/markdown"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void importDocFile(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+              {editingDoc && (
+                <button
+                  onClick={() => setEditingDoc(null)}
+                  className="mb-4 text-blue-600 hover:underline text-sm"
+                >
+                  ← 返回新建
+                </button>
+              )}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">标题</label>
+                  <input
+                    type="text"
+                    value={editingDoc ? editingDoc.title : newDoc.title}
+                    onChange={(e) =>
+                      editingDoc
+                        ? setEditingDoc({
+                            ...editingDoc,
+                            title: e.target.value,
+                          })
+                        : setNewDoc({ ...newDoc, title: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-md"
+                    placeholder="文档标题"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    文件名 (slug)
+                  </label>
+                  <input
+                    type="text"
+                    value={editingDoc ? editingDoc.slug : newDoc.slug}
+                    onChange={(e) =>
+                      editingDoc
+                        ? undefined
+                        : setNewDoc({ ...newDoc, slug: e.target.value })
+                    }
+                    disabled={!!editingDoc}
+                    className="w-full px-3 py-2 border rounded-md disabled:bg-gray-100"
+                    placeholder="例如 getting-started（留空则按标题生成）"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">简介</label>
+                  <input
+                    type="text"
+                    value={
+                      editingDoc ? editingDoc.description : newDoc.description
+                    }
+                    onChange={(e) =>
+                      editingDoc
+                        ? setEditingDoc({
+                            ...editingDoc,
+                            description: e.target.value,
+                          })
+                        : setNewDoc({
+                            ...newDoc,
+                            description: e.target.value,
+                          })
+                    }
+                    className="w-full px-3 py-2 border rounded-md"
+                    placeholder="文档简介"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">排序</label>
+                  <input
+                    type="number"
+                    value={editingDoc ? editingDoc.order : newDoc.order}
+                    onChange={(e) => {
+                      const order = Number(e.target.value) || 0;
+                      if (editingDoc) {
+                        setEditingDoc({ ...editingDoc, order });
+                      } else {
+                        setNewDoc({ ...newDoc, order });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    内容 (Markdown)
+                  </label>
+                  <textarea
+                    value={editingDoc ? editingDoc.content : newDoc.content}
+                    onChange={(e) =>
+                      editingDoc
+                        ? setEditingDoc({
+                            ...editingDoc,
+                            content: e.target.value,
+                          })
+                        : setNewDoc({ ...newDoc, content: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-md h-64 font-mono text-sm"
+                    placeholder="文档内容，支持 Markdown"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={editingDoc ? updateDoc : createDoc}
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                  >
+                    {editingDoc ? "保存修改" : "发布文档"}
+                  </button>
+                  {editingDoc && (
+                    <button
+                      onClick={() => deleteDoc(editingDoc)}
+                      className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
+                    >
+                      删除
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === "about" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold">编辑关于页</h2>
+              <button
+                onClick={saveAbout}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+              >
+                保存关于页
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold">战队历史</h3>
+                <button
+                  onClick={() =>
+                    setAbout((prev) => ({
+                      ...prev,
+                      history: [...prev.history, ""],
+                    }))
+                  }
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  + 添加段落
+                </button>
+              </div>
+              {about.history.map((paragraph, index) => (
+                <div key={index} className="flex gap-2">
+                  <textarea
+                    value={paragraph}
+                    onChange={(e) =>
+                      setAbout((prev) => ({
+                        ...prev,
+                        history: prev.history.map((p, i) =>
+                          i === index ? e.target.value : p
+                        ),
+                      }))
+                    }
+                    className="w-full px-3 py-2 border rounded-md h-24"
+                    placeholder={`第 ${index + 1} 段`}
+                  />
+                  <button
+                    onClick={() =>
+                      setAbout((prev) => ({
+                        ...prev,
+                        history: prev.history.filter((_, i) => i !== index),
+                      }))
+                    }
+                    className="text-red-500 text-sm shrink-0"
+                  >
+                    删除
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold">荣誉成就</h3>
+                <button
+                  onClick={() =>
+                    setAbout((prev) => ({
+                      ...prev,
+                      honors: [
+                        ...prev.honors,
+                        { title: "", year: "", icon: "🏆" },
+                      ],
+                    }))
+                  }
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  + 添加荣誉
+                </button>
+              </div>
+              {about.honors.map((honor, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 sm:grid-cols-4 gap-2 border-b pb-4"
+                >
+                  <input
+                    type="text"
+                    value={honor.icon}
+                    onChange={(e) =>
+                      setAbout((prev) => ({
+                        ...prev,
+                        honors: prev.honors.map((h, i) =>
+                          i === index ? { ...h, icon: e.target.value } : h
+                        ),
+                      }))
+                    }
+                    className="px-3 py-2 border rounded-md"
+                    placeholder="图标"
+                  />
+                  <input
+                    type="text"
+                    value={honor.title}
+                    onChange={(e) =>
+                      setAbout((prev) => ({
+                        ...prev,
+                        honors: prev.honors.map((h, i) =>
+                          i === index ? { ...h, title: e.target.value } : h
+                        ),
+                      }))
+                    }
+                    className="sm:col-span-2 px-3 py-2 border rounded-md"
+                    placeholder="荣誉名称"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={honor.year}
+                      onChange={(e) =>
+                        setAbout((prev) => ({
+                          ...prev,
+                          honors: prev.honors.map((h, i) =>
+                            i === index ? { ...h, year: e.target.value } : h
+                          ),
+                        }))
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="年份"
+                    />
+                    <button
+                      onClick={() =>
+                        setAbout((prev) => ({
+                          ...prev,
+                          honors: prev.honors.filter((_, i) => i !== index),
+                        }))
+                      }
+                      className="text-red-500 text-sm shrink-0"
+                    >
+                      删
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold">联系方式</h3>
+                <button
+                  onClick={() =>
+                    setAbout((prev) => ({
+                      ...prev,
+                      contacts: [
+                        ...prev.contacts,
+                        { label: "", detail: "", url: "#", icon: "🔗" },
+                      ],
+                    }))
+                  }
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  + 添加联系方式
+                </button>
+              </div>
+              {about.contacts.map((contact, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-b pb-4"
+                >
+                  <input
+                    type="text"
+                    value={contact.icon}
+                    onChange={(e) =>
+                      setAbout((prev) => ({
+                        ...prev,
+                        contacts: prev.contacts.map((c, i) =>
+                          i === index ? { ...c, icon: e.target.value } : c
+                        ),
+                      }))
+                    }
+                    className="px-3 py-2 border rounded-md"
+                    placeholder="图标"
+                  />
+                  <input
+                    type="text"
+                    value={contact.label}
+                    onChange={(e) =>
+                      setAbout((prev) => ({
+                        ...prev,
+                        contacts: prev.contacts.map((c, i) =>
+                          i === index ? { ...c, label: e.target.value } : c
+                        ),
+                      }))
+                    }
+                    className="px-3 py-2 border rounded-md"
+                    placeholder="名称（如 Telegram）"
+                  />
+                  <input
+                    type="text"
+                    value={contact.detail}
+                    onChange={(e) =>
+                      setAbout((prev) => ({
+                        ...prev,
+                        contacts: prev.contacts.map((c, i) =>
+                          i === index ? { ...c, detail: e.target.value } : c
+                        ),
+                      }))
+                    }
+                    className="px-3 py-2 border rounded-md"
+                    placeholder="说明文字"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={contact.url}
+                      onChange={(e) =>
+                        setAbout((prev) => ({
+                          ...prev,
+                          contacts: prev.contacts.map((c, i) =>
+                            i === index ? { ...c, url: e.target.value } : c
+                          ),
+                        }))
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="链接 URL"
+                    />
+                    <button
+                      onClick={() =>
+                        setAbout((prev) => ({
+                          ...prev,
+                          contacts: prev.contacts.filter((_, i) => i !== index),
+                        }))
+                      }
+                      className="text-red-500 text-sm shrink-0"
+                    >
+                      删
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
