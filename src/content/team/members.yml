@@ -5,7 +5,7 @@ members:
     role: "In-game Leader"
     isCaptain: true
     avatar: "/images/team/captain.jpg"
-    bio: "战队创始人兼指挥，拥有丰富的比赛经验和出色的战术意识。"
+    bio: "战队指挥，拥有丰富的战术储备和出色的战术意识。"
     fiveEUrl: ""
     social:
       steam: "https://steamcommunity.com/id/76561199143263933/"
@@ -34,7 +34,7 @@ members:
     role: "Entry Fragger"
     isCaptain: false
     avatar: "/images/team/player2.jpg"
-    bio: "突破手，以激进的打法和快速的反应著称。 "
+    bio: "突破手，以激进的打法和快速的反应著称。"
     fiveEUrl: ""
     social:
       steam: "https://steamcommunity.com/id/AQAQAQSWQSQS/"
