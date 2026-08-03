@@ -450,60 +450,139 @@ ${editing.content}`;
     }
   };
 
-  const uploadAvatar = async (memberId: string, file: File) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const result = String(reader.result || "");
-      const base64 = result.split(",")[1];
-      if (!base64) return;
+  const fileToCompressedBase64 = (file: File): Promise<{ base64: string; ext: string }> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("读取文件失败"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("图片解析失败"));
+        img.onload = () => {
+          const maxSize = 800;
+          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+          const width = Math.max(1, Math.round(img.width * scale));
+          const height = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("浏览器不支持图片压缩"));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
 
-      const ext = file.name.split(".").pop() || "jpg";
+          let quality = 0.85;
+          let dataUrl = canvas.toDataURL("image/jpeg", quality);
+          while (dataUrl.length > 900_000 && quality > 0.4) {
+            quality -= 0.1;
+            dataUrl = canvas.toDataURL("image/jpeg", quality);
+          }
+
+          const base64 = dataUrl.split(",")[1];
+          if (!base64) {
+            reject(new Error("图片编码失败"));
+            return;
+          }
+          if (base64.length > 1_000_000) {
+            reject(new Error("图片仍然过大，请换一张更小的图"));
+            return;
+          }
+          resolve({ base64, ext: "jpg" });
+        };
+        img.src = String(reader.result || "");
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const uploadAvatar = async (memberId: string, file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setMessage("请选择图片文件");
+      return;
+    }
+
+    setMessage("正在压缩并上传头像...");
+    try {
+      const { base64, ext } = await fileToCompressedBase64(file);
       const path = `public/images/team/${memberId}.${ext}`;
 
-      try {
-        // Check if exists
-        let sha: string | undefined;
-        const existing = await fetch(
-          `https://api.github.com/repos/${REPO}/contents/${path}`,
-          { headers: authHeaders(token) }
+      let sha: string | undefined;
+      const existing = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${path}?ref=main`,
+        { headers: authHeaders(token) }
+      );
+      if (existing.ok) {
+        const existingData = await existing.json();
+        sha = existingData.sha;
+      } else if (existing.status !== 404) {
+        const err = await existing.json().catch(() => ({}));
+        setMessage(
+          `检查头像失败: ${err.message || existing.statusText || existing.status}`
         );
-        if (existing.ok) {
-          const existingData = await existing.json();
-          sha = existingData.sha;
-        }
-
-        const res = await fetch(
-          `https://api.github.com/repos/${REPO}/contents/${path}`,
-          {
-            method: "PUT",
-            headers: {
-              ...authHeaders(token),
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              message: `update: upload avatar for ${memberId}`,
-              content: base64,
-              ...(sha ? { sha } : {}),
-            }),
-          }
-        );
-
-        if (res.ok) {
-          const avatarUrl = `/images/team/${memberId}.${ext}`;
-          setMembers((prev) =>
-            prev.map((m) =>
-              m.id === memberId ? { ...m, avatar: avatarUrl } : m
-            )
-          );
-          setMessage("头像已上传，请再点「保存团队」写入配置");
-        } else {
-          setMessage("头像上传失败");
-        }
-      } catch {
-        setMessage("头像上传失败");
+        return;
       }
-    };
-    reader.readAsDataURL(file);
+
+      const res = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${path}`,
+        {
+          method: "PUT",
+          headers: {
+            ...authHeaders(token),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `update: upload avatar for ${memberId}`,
+            content: base64,
+            branch: "main",
+            ...(sha ? { sha } : {}),
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setMessage(
+          `头像上传失败: ${err.message || res.statusText || res.status}`
+        );
+        return;
+      }
+
+      const avatarPath = `/images/team/${memberId}.${ext}`;
+      const nextMembers = members.map((m) =>
+        m.id === memberId ? { ...m, avatar: avatarPath } : m
+      );
+      setMembers(nextMembers);
+
+      // Persist avatar path into members.yml immediately
+      const yaml = membersToYaml(nextMembers);
+      const saveRes = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${MEMBERS_PATH}`,
+        {
+          method: "PUT",
+          headers: {
+            ...authHeaders(token),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `update: set avatar for ${memberId}`,
+            content: encodeBase64(yaml),
+            branch: "main",
+            sha: membersSha,
+          }),
+        }
+      );
+
+      if (saveRes.ok) {
+        const saveData = await saveRes.json();
+        setMembersSha(saveData.content.sha);
+        setMessage("头像上传成功，正在自动部署...");
+        await triggerDeploy();
+      } else {
+        setMessage("头像文件已上传，但写入成员配置失败，请再点「保存团队」");
+      }
+    } catch (err) {
+      setMessage(`头像上传失败: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   const loadComments = async (t: string) => {
