@@ -2,7 +2,8 @@
 members:
   - id: "captain"
     name: "Alex"
-    role: "captain"
+    role: "In-game Leader"
+    isCaptain: true
     bio: "战队创始人兼指挥，拥有丰富的比赛经验和出色的战术意识。"
     social:
       steam: "https://steamcommunity.com"
@@ -15,7 +16,8 @@ members:
 
   - id: "player1"
     name: "Jordan"
-    role: "player"
+    role: "AWPer"
+    isCaptain: false
     bio: "主狙击手，精准的枪法和冷静的判断是团队的核心火力。"
     social:
       steam: "https://steamcommunity.com"
@@ -26,7 +28,8 @@ members:
 
   - id: "player2"
     name: "Sam"
-    role: "player"
+    role: "Entry Fragger"
+    isCaptain: false
     bio: "突破手，以激进的打法和快速的反应著称。"
     social:
       steam: "https://steamcommunity.com"
@@ -37,7 +40,8 @@ members:
 
   - id: "player3"
     name: "Chris"
-    role: "player"
+    role: "Support"
+    isCaptain: false
     bio: "辅助选手，擅长道具使用和信息收集。"
     social:
       steam: "https://steamcommunity.com"
@@ -48,7 +52,8 @@ members:
 
   - id: "player4"
     name: "Taylor"
-    role: "player"
+    role: "Lurker"
+    isCaptain: false
     bio: "自由人，灵活多变的打法为团队创造空间。"
     social:
       steam: "https://steamcommunity.com"
@@ -59,7 +64,8 @@ members:
 
   - id: "coach"
     name: "Morgan"
-    role: "coach"
+    role: "Coach"
+    isCaptain: false
     bio: "资深教练，专注于战术研究和团队配合训练。"
     social:
       twitter: "https://twitter.com"

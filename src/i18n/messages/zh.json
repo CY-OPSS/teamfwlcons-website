@@ -31,14 +31,7 @@
     "noResults": "未找到相关文档"
   },
   "team": {
-    "title": "我们的团队",
-    "role": {
-      "captain": "队长",
-      "player": "选手",
-      "coach": "教练",
-      "analyst": "分析师",
-      "manager": "经理"
-    }
+    "title": "我们的团队"
   },
   "about": {
     "title": "关于战队",

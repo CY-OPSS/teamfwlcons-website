@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TEAM_ROLES, formatTeamRole } from "@/lib/team-roles";
 
 type Tab = "posts" | "team" | "comments" | "stats";
 
@@ -17,6 +18,7 @@ interface TeamMember {
   id: string;
   name: string;
   role: string;
+  isCaptain: boolean;
   avatar?: string;
   bio: string;
   social: Record<string, string>;
@@ -60,6 +62,7 @@ function membersToYaml(members: TeamMember[]) {
     lines.push(`  - id: "${member.id}"`);
     lines.push(`    name: "${member.name.replace(/"/g, '\\"')}"`);
     lines.push(`    role: "${member.role}"`);
+    lines.push(`    isCaptain: ${member.isCaptain ? "true" : "false"}`);
     if (member.avatar) {
       lines.push(`    avatar: "${member.avatar}"`);
     }
@@ -112,7 +115,8 @@ function parseMembersYaml(raw: string): TeamMember[] {
       members.push({
         id,
         name: get("name") || "Unknown",
-        role: get("role") || "player",
+        role: get("role") || "Support",
+        isCaptain: /isCaptain:\s*true/.test(text),
         avatar: get("avatar") || undefined,
         bio: get("bio") || "",
         social: {
@@ -810,7 +814,9 @@ ${editing.content}`;
                       </div>
                       <div>
                         <div className="font-medium">{member.name}</div>
-                        <div className="text-sm text-gray-500">{member.role}</div>
+                        <div className="text-sm text-gray-500">
+                          {formatTeamRole(member.role, member.isCaptain)}
+                        </div>
                       </div>
                     </div>
                   </li>
@@ -849,19 +855,49 @@ ${editing.content}`;
                         setMembers((prev) =>
                           prev.map((m) =>
                             m.id === editingMember.id
-                              ? { ...m, role: e.target.value }
+                              ? {
+                                  ...m,
+                                  role: e.target.value,
+                                  isCaptain:
+                                    e.target.value === "Coach"
+                                      ? false
+                                      : m.isCaptain,
+                                }
                               : m
                           )
                         )
                       }
                       className="w-full px-3 py-2 border rounded-md"
                     >
-                      <option value="captain">captain</option>
-                      <option value="player">player</option>
-                      <option value="coach">coach</option>
-                      <option value="analyst">analyst</option>
-                      <option value="manager">manager</option>
+                      {TEAM_ROLES.map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
                     </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="isCaptain"
+                      type="checkbox"
+                      checked={editingMember.isCaptain}
+                      disabled={editingMember.role === "Coach"}
+                      onChange={(e) =>
+                        setMembers((prev) =>
+                          prev.map((m) =>
+                            m.id === editingMember.id
+                              ? { ...m, isCaptain: e.target.checked }
+                              : m
+                          )
+                        )
+                      }
+                    />
+                    <label htmlFor="isCaptain" className="text-sm">
+                      同时是队长（显示为 Captain / 角色）
+                    </label>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    预览：{formatTeamRole(editingMember.role, editingMember.isCaptain)}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">简介</label>

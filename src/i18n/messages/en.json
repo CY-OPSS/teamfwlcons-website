@@ -31,14 +31,7 @@
     "noResults": "No documents found"
   },
   "team": {
-    "title": "Our Team",
-    "role": {
-      "captain": "Captain",
-      "player": "Player",
-      "coach": "Coach",
-      "analyst": "Analyst",
-      "manager": "Manager"
-    }
+    "title": "Our Team"
   },
   "about": {
     "title": "About Us",

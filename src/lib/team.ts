@@ -1,11 +1,14 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
+import { formatTeamRole } from "@/lib/team-roles";
 
 export interface TeamMember {
   id: string;
   name: string;
   role: string;
+  isCaptain: boolean;
+  displayRole: string;
   avatar?: string;
   bio: string;
   social: {
@@ -34,14 +37,21 @@ export function getTeamMembers(): TeamMember[] {
   const { data } = matter(fileContent);
 
   return (data.members || []).map(
-    (member: Record<string, unknown>, index: number) => ({
-      id: member.id || String(index),
-      name: member.name || "Unknown",
-      role: member.role || "player",
-      avatar: member.avatar,
-      bio: member.bio || "",
-      social: member.social || {},
-      stats: member.stats || {},
-    })
+    (member: Record<string, unknown>, index: number) => {
+      const role = String(member.role || "Support");
+      const isCaptain = Boolean(member.isCaptain);
+
+      return {
+        id: String(member.id || index),
+        name: String(member.name || "Unknown"),
+        role,
+        isCaptain,
+        displayRole: formatTeamRole(role, isCaptain),
+        avatar: member.avatar ? String(member.avatar) : undefined,
+        bio: String(member.bio || ""),
+        social: (member.social as TeamMember["social"]) || {},
+        stats: (member.stats as TeamMember["stats"]) || {},
+      };
+    }
   );
 }
