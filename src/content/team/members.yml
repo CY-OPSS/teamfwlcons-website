@@ -19,6 +19,7 @@ members:
     name: "rune"
     role: "AWPer"
     isCaptain: false
+    avatar: "/images/team/player1.jpg"
     bio: "主狙击手，精准的枪法和冷静的判断是团队的核心火力。"
     social:
       steam: "https://steamcommunity.com"
@@ -31,6 +32,7 @@ members:
     name: "Nioon"
     role: "Entry Fragger"
     isCaptain: false
+    avatar: "/images/team/player2.jpg"
     bio: "突破手，以激进的打法和快速的反应著称。"
     social:
       steam: "https://steamcommunity.com"
@@ -43,6 +45,7 @@ members:
     name: "ddweiii"
     role: "Support"
     isCaptain: false
+    avatar: "/images/team/player3.jpg"
     bio: "辅助选手，擅长道具使用和信息收集。"
     social:
       steam: "https://steamcommunity.com"
@@ -55,6 +58,7 @@ members:
     name: "oligei"
     role: "Lurker"
     isCaptain: false
+    avatar: "/images/team/player4.jpg"
     bio: "自由人，灵活多变的打法为团队创造空间。"
     social:
       steam: "https://steamcommunity.com"
