@@ -1,46 +1,76 @@
 {
-  "updatedAt": "2026-08-03T05:14:45+00:00",
+  "updatedAt": "2026-08-03T05:36:14+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
-      "source": "none",
-      "syncedAt": "2026-08-03T05:14:10+00:00",
-      "stats": {},
-      "error": "sync_failed_need_uuid"
+      "source": "api_v3",
+      "syncedAt": "2026-08-03T05:36:06+00:00",
+      "stats": {
+        "rating": "1.08",
+        "headshot": "42%",
+        "winRate": "42%",
+        "kd": "1.22",
+        "adr": "89.8",
+        "elo": "1501"
+      }
     },
     "player1": {
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
-      "source": "none",
-      "syncedAt": "2026-08-03T05:14:19+00:00",
-      "stats": {},
-      "error": "sync_failed_need_uuid"
+      "source": "api_v3",
+      "syncedAt": "2026-08-03T05:36:08+00:00",
+      "stats": {
+        "rating": "1.10",
+        "headshot": "41%",
+        "winRate": "47%",
+        "kd": "1.12",
+        "adr": "85.0",
+        "elo": "2328"
+      }
     },
     "player2": {
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
-      "source": "none",
-      "syncedAt": "2026-08-03T05:14:27+00:00",
-      "stats": {},
-      "error": "sync_failed_need_uuid"
+      "source": "api_v3",
+      "syncedAt": "2026-08-03T05:36:09+00:00",
+      "stats": {
+        "rating": "1.08",
+        "headshot": "48%",
+        "winRate": "52%",
+        "kd": "1.05",
+        "adr": "83.3",
+        "elo": "2111"
+      }
     },
     "player3": {
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
-      "source": "none",
-      "syncedAt": "2026-08-03T05:14:35+00:00",
-      "stats": {},
-      "error": "sync_failed_need_uuid"
+      "source": "api_v3",
+      "syncedAt": "2026-08-03T05:36:12+00:00",
+      "stats": {
+        "rating": "0.96",
+        "headshot": "31%",
+        "winRate": "41%",
+        "kd": "0.78",
+        "adr": "62.7",
+        "elo": "1372"
+      }
     },
     "player4": {
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
-      "source": "none",
-      "syncedAt": "2026-08-03T05:14:44+00:00",
-      "stats": {},
-      "error": "sync_failed_need_uuid"
+      "source": "api_v3",
+      "syncedAt": "2026-08-03T05:36:13+00:00",
+      "stats": {
+        "rating": "1.09",
+        "headshot": "45%",
+        "winRate": "50%",
+        "kd": "0.93",
+        "adr": "71.3",
+        "elo": "1700"
+      }
     }
   }
 }
