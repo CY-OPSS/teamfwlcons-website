@@ -59,6 +59,7 @@ interface CommentItem {
   content: string;
   postSlug: string;
   locale: string;
+  parentId?: string | null;
   createdAt: string;
   user: { username: string; name: string | null };
 }
@@ -1907,7 +1908,8 @@ ${doc.content}`;
                   >
                     <div>
                       <div className="text-sm text-gray-500 mb-1">
-                        {comment.user.username} · {comment.postSlug} ·{" "}
+                        {comment.user.username} · {comment.postSlug}
+                        {comment.parentId ? " · 回复" : ""} ·{" "}
                         {new Date(comment.createdAt).toLocaleString("zh-CN")}
                       </div>
                       <div className="text-gray-800">{comment.content}</div>
