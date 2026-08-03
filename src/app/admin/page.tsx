@@ -38,6 +38,8 @@ interface CommentItem {
 interface StatsData {
   commentCount: number;
   userCount: number;
+  siteViews: number;
+  postViews: number;
   totalViews: number;
   topPages: { slug: string; locale: string; views: number }[];
   analyticsUrl: string;
@@ -1158,11 +1160,22 @@ ${editing.content}`;
 
         {tab === "stats" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg shadow p-6 sm:col-span-2 lg:col-span-1 border-l-4 border-blue-600">
+                <div className="text-sm text-gray-500">全站访问量</div>
+                <div className="text-3xl font-bold mt-2">
+                  {stats
+                    ? (stats.siteViews ?? stats.totalViews).toLocaleString()
+                    : "—"}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  首页、团队、博客等所有公开页面累计
+                </p>
+              </div>
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="text-sm text-gray-500">文章浏览总量</div>
                 <div className="text-3xl font-bold mt-2">
-                  {stats?.totalViews ?? "—"}
+                  {stats ? (stats.postViews ?? 0).toLocaleString() : "—"}
                 </div>
               </div>
               <div className="bg-white rounded-lg shadow p-6">
@@ -1212,8 +1225,8 @@ ${editing.content}`;
                 </ul>
               )}
               <p className="text-xs text-gray-500 mt-4">
-                全站访客趋势、来源地区等请在 Vercel Analytics
-                查看（已接入 @vercel/analytics）。
+                全站访问量从本次部署起开始累计。访客趋势、来源地区等可在
+                Vercel Analytics 查看。
               </p>
             </div>
           </div>

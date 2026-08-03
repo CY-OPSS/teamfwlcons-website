@@ -9,21 +9,34 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [commentCount, userCount, views] = await Promise.all([
+    const [commentCount, userCount, views, aggregates] = await Promise.all([
       prisma.comment.count(),
       prisma.user.count(),
       prisma.viewStat.findMany({
         orderBy: { views: "desc" },
-        take: 20,
+        take: 30,
+      }),
+      prisma.viewStat.findMany({
+        select: { slug: true, views: true },
       }),
     ]);
 
-    const totalViews = views.reduce((sum, item) => sum + item.views, 0);
+    let siteViews = 0;
+    let postViews = 0;
+    for (const item of aggregates) {
+      if (item.slug.startsWith("/")) {
+        siteViews += item.views;
+      } else {
+        postViews += item.views;
+      }
+    }
 
     return NextResponse.json({
       commentCount,
       userCount,
-      totalViews,
+      siteViews,
+      postViews,
+      totalViews: siteViews,
       topPages: views,
       analyticsUrl:
         "https://vercel.com/facwink/teamfwlcons-website/analytics",

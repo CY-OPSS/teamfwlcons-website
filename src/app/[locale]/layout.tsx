@@ -7,6 +7,7 @@ import { locales, type Locale } from "@/i18n/config";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { SiteViewTracker } from "@/components/SiteViewTracker";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -32,6 +33,7 @@ export default async function LocaleLayout({
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
+            <SiteViewTracker />
             <Navbar />
             <main className="flex-1">{children}</main>
             <Footer />
