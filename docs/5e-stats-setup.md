@@ -13,21 +13,37 @@
 
 本地调试可用 `scripts/5e/players.private.json`（已 gitignore），格式见 `players.example.json`。
 
+## 重要：需要 36 位 UUID
+
+主页链接里的短 ID（如 `0123zilycb7f`）只是 **domain**，API 真正要的是 36 位 **uuid**（形如 `0678a1b3-9e38-11ee-9ce2-ec0d9a495494`）。
+
+### 如何抓取每个人的 UUID（约 30 秒）
+
+1. 浏览器登录 [5EPlay](https://arena.5eplay.com/)
+2. 打开该队员主页（`https://arena.5eplay.com/data/player/短ID`）
+3. 按 **F12** → **Network（网络）**
+4. 筛选框输入：`player/home` 或 `v3/player/home`
+5. 点开请求，在 URL 里复制 `uuid=` 后面那一串（带横杠、共 36 位）
+6. 写入 Secret 的 `uuid` 字段
+
+一人复制一次即可；以后定时同步不用再抓。
+
 ## 配置步骤
 
 1. 打开仓库 **Settings → Secrets and variables → Actions**
-2. 新增 Secret `FIVE_E_PLAYERS_JSON`，内容示例：
+2. 新增 / 更新 Secret `FIVE_E_PLAYERS_JSON`，内容示例：
 
 ```json
 [
   {
     "memberId": "captain",
-    "domain": "你的5E主页ID",
-    "profileUrl": "https://arena.5eplay.com/data/player/你的5E主页ID"
+    "domain": "短主页ID",
+    "uuid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "profileUrl": "https://arena.5eplay.com/data/player/短主页ID"
   },
   {
     "memberId": "player1",
-    "domain": "另一个ID"
+    "uuid": "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
   }
 ]
 ```
@@ -50,6 +66,7 @@ python scripts/5e/sync_stats.py
 
 ## 说明
 
+- 同步优先走 `gate.5eplay.com/.../v3/player/home`（展示 Rating / HS% / 胜率 / K/D / ADR / 5ESS）。
 - 非官方接口，5E 改版后可能失效；失败时会保留上一份成功数据。
 - 前台标注「非实时」。
 - 不要把 Token / 玩家映射写进 `members.yml` 或提交到 Git。

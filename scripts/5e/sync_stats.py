@@ -18,7 +18,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -28,14 +28,25 @@ OUTPUT_PATH = ROOT / "src" / "content" / "stats" / "5e.json"
 PRIVATE_PLAYERS_PATH = Path(__file__).resolve().parent / "players.private.json"
 
 API_BASE = "https://gate.5eplay.com/crane/http/api/data"
+PLATFORM_API = "https://platform-api.5eplay.com"
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+)
+UUID_RE = re.compile(
+    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+)
+UUID_FIND_RE = re.compile(
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 )
 
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def is_uuid(value: str | None) -> bool:
+    return bool(value and UUID_RE.match(value.strip()))
 
 
 def extract_domain(value: str | None) -> str | None:
@@ -52,6 +63,24 @@ def extract_domain(value: str | None) -> str | None:
     return text
 
 
+def extract_uuid_from_url(value: str | None) -> str | None:
+    if not value:
+        return None
+    text = value.strip()
+    if is_uuid(text):
+        return text
+    if text.startswith("http://") or text.startswith("https://"):
+        qs = parse_qs(urlparse(text).query)
+        for key in ("uuid", "uid", "user_uuid"):
+            for item in qs.get(key, []):
+                if is_uuid(item):
+                    return item.strip()
+        found = UUID_FIND_RE.search(text)
+        if found:
+            return found.group(0)
+    return None
+
+
 def load_players() -> list[dict[str, str]]:
     """
     Load private player mapping.
@@ -59,6 +88,10 @@ def load_players() -> list[dict[str, str]]:
     Priority:
     1) FIVE_E_PLAYERS_JSON env (GitHub Secret)
     2) scripts/5e/players.private.json (gitignored local file)
+
+    Each item should provide memberId plus either:
+    - uuid (preferred, 36-char)
+    - domain / profileUrl (short homepage id; may need token to resolve)
     """
     raw = os.environ.get("FIVE_E_PLAYERS_JSON", "").strip()
     if raw:
@@ -76,22 +109,41 @@ def load_players() -> list[dict[str, str]]:
     players: list[dict[str, str]] = []
     for item in data:
         member_id = str(item.get("memberId") or "").strip()
-        domain = extract_domain(
-            item.get("domain") or item.get("uuid") or item.get("profileUrl")
-        )
-        if not member_id or not domain:
+        if not member_id:
             continue
+
+        uuid = extract_uuid_from_url(str(item.get("uuid") or "").strip()) or extract_uuid_from_url(
+            str(item.get("profileUrl") or "").strip()
+        )
+        domain = extract_domain(
+            item.get("domain") or item.get("profileUrl") or item.get("uuid")
+        )
+        # If "domain" field itself is a real uuid, treat it as uuid.
+        if not uuid and is_uuid(domain or ""):
+            uuid = domain
+            domain = None
+
+        if not uuid and not domain:
+            continue
+
         profile_url = str(
             item.get("profileUrl")
-            or f"https://arena.5eplay.com/data/player/{domain}"
+            or (
+                f"https://arena.5eplay.com/data/player/{domain}"
+                if domain
+                else f"https://arena.5eplay.com/data/player/?uuid={uuid}"
+            )
         ).strip()
-        players.append(
-            {
-                "memberId": member_id,
-                "domain": domain,
-                "profileUrl": profile_url,
-            }
-        )
+
+        record = {
+            "memberId": member_id,
+            "profileUrl": profile_url,
+        }
+        if domain:
+            record["domain"] = domain
+        if uuid:
+            record["uuid"] = uuid
+        players.append(record)
     return players
 
 
@@ -120,6 +172,170 @@ def session_from_env() -> requests.Session:
     return session
 
 
+def walk_find_uuid(obj: Any) -> str | None:
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            lower = str(key).lower()
+            if lower in {"uuid", "user_uuid", "uid_uuid"} and is_uuid(str(value)):
+                return str(value)
+            found = walk_find_uuid(value)
+            if found:
+                return found
+    elif isinstance(obj, list):
+        for item in obj[:50]:
+            found = walk_find_uuid(item)
+            if found:
+                return found
+    elif isinstance(obj, str) and is_uuid(obj):
+        return obj
+    return None
+
+
+def resolve_uuid(session: requests.Session, domain: str) -> str | None:
+    """Resolve short homepage domain to 36-char UUID."""
+    if is_uuid(domain):
+        return domain
+
+    # Authenticated platform lookup (may accept domains when logged in).
+    payloads = [
+        {"domains": [domain]},
+        {"domain": domain},
+        {"keyword": domain},
+        {"domains": domain},
+    ]
+    endpoints = [
+        f"{PLATFORM_API}/api/user/info",
+        f"{PLATFORM_API}/api/user/search",
+        "https://gate.5eplay.com/userauthinterface/http/api/user/info",
+    ]
+    for url in endpoints:
+        for payload in payloads:
+            try:
+                res = session.post(url, json=payload, timeout=20)
+                if res.status_code >= 400:
+                    continue
+                data = res.json()
+            except (requests.RequestException, ValueError):
+                continue
+            found = walk_find_uuid(data)
+            if found:
+                print(f"  resolved domain via {urlparse(url).path}")
+                return found
+
+    # Last resort: if HTML somehow contains uuid (rare behind WAF).
+    for url in (
+        f"https://csgo.5eplay.com/data/player/{domain}",
+        f"https://arena.5eplay.com/data/player/{domain}",
+    ):
+        try:
+            res = session.get(url, timeout=20)
+            if res.status_code != 200:
+                continue
+            if "aliyun_waf" in res.text or "acw_sc__v2" in res.text:
+                continue
+            found = UUID_FIND_RE.search(res.text)
+            if found:
+                print("  resolved domain via html")
+                return found.group(0)
+        except requests.RequestException:
+            continue
+    return None
+
+
+def pct_text(value: Any) -> str | None:
+    if value in (None, "", "-"):
+        return None
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        text = str(value)
+        return text if text.endswith("%") else None
+    if num <= 1:
+        num *= 100
+    return f"{num:.0f}%"
+
+
+def format_num(value: Any, digits: int = 2) -> str | None:
+    if value in (None, "", "-"):
+        return None
+    try:
+        return f"{float(value):.{digits}f}"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def parse_v3_home(data: dict[str, Any]) -> dict[str, str]:
+    stats: dict[str, str] = {}
+    season = data.get("season_data") or {}
+    career = data.get("career") or {}
+
+    rating = (
+        season.get("avg_rating")
+        or season.get("rating")
+        or season.get("avg_rating3")
+    )
+    if rating not in (None, "", "-", 0, 0.0):
+        stats["rating"] = format_num(rating, 2) or str(rating)
+
+    hs = pct_text(season.get("per_headshot") or season.get("avg_hs"))
+    if hs:
+        stats["headshot"] = hs
+
+    win = pct_text(season.get("per_win_match"))
+    if not win:
+        total = career.get("match_total")
+        wins = career.get("match_win")
+        try:
+            if total and float(total) > 0 and wins is not None:
+                win = f"{round(float(wins) / float(total) * 100)}%"
+        except (TypeError, ValueError):
+            win = None
+    if win:
+        stats["winRate"] = win
+
+    kills = season.get("kill")
+    deaths = season.get("death")
+    try:
+        if deaths not in (None, "", "-") and float(deaths) > 0 and kills is not None:
+            stats["kd"] = f"{float(kills) / float(deaths):.2f}"
+        elif kills not in (None, "", "-", 0, 0.0):
+            stats["kd"] = format_num(kills, 2) or str(kills)
+    except (TypeError, ValueError):
+        pass
+
+    adr = season.get("adr") or season.get("avg_adr")
+    if adr not in (None, "", "-", 0, 0.0):
+        stats["adr"] = format_num(adr, 1) or str(adr)
+
+    elo = career.get("elo") or season.get("elo")
+    if elo not in (None, "", "-"):
+        stats["elo"] = format_num(elo, 0) or str(elo)
+
+    return stats
+
+
+def fetch_api_v3_home(session: requests.Session, uuid: str) -> dict[str, str]:
+    try:
+        res = session.get(
+            f"{API_BASE}/v3/player/home",
+            params={"uuid": uuid},
+            timeout=20,
+        )
+        payload = res.json()
+    except (requests.RequestException, ValueError) as exc:
+        print(f"API v3 home failed for {uuid}: {exc}", file=sys.stderr)
+        return {}
+
+    data = payload.get("data")
+    if not isinstance(data, dict) or not data:
+        print(
+            f"API v3 home empty for {uuid}: {payload.get('message') or payload.get('errcode')}",
+            file=sys.stderr,
+        )
+        return {}
+    return parse_v3_home(data)
+
+
 def parse_html_stats(html: str) -> dict[str, str]:
     soup = BeautifulSoup(html, "html.parser")
     stats: dict[str, str] = {}
@@ -136,6 +352,7 @@ def parse_html_stats(html: str) -> dict[str, str]:
         "plr": "elo",
         "elo": "elo",
         "天梯分": "elo",
+        "5ess": "elo",
     }
 
     def assign(label: str, value: str) -> None:
@@ -183,75 +400,7 @@ def fetch_html_profile(session: requests.Session, domain: str) -> dict[str, str]
     return {}
 
 
-def fetch_api_home(session: requests.Session, domain: str) -> dict[str, str]:
-    try:
-        res = session.get(
-            f"{API_BASE}/player/home",
-            params={"uuid": domain},
-            timeout=20,
-        )
-        payload = res.json()
-    except (requests.RequestException, ValueError) as exc:
-        print(f"API home failed for {domain}: {exc}", file=sys.stderr)
-        return {}
-
-    if not payload.get("data"):
-        print(
-            f"API home empty for {domain}: {payload.get('message') or payload.get('errcode')}",
-            file=sys.stderr,
-        )
-        return {}
-
-    data = payload.get("data") or {}
-    stats: dict[str, str] = {}
-
-    def walk(obj: Any, path: str = "") -> None:
-        if isinstance(obj, dict):
-            for key, value in obj.items():
-                lower = str(key).lower()
-                if value in (None, "", "-"):
-                    continue
-                if lower in {"rating", "rating1", "fight_rating"} and "rating" not in stats:
-                    stats["rating"] = str(value)
-                elif lower in {"kd", "kill_death", "k_d"} and "kd" not in stats:
-                    stats["kd"] = str(value)
-                elif lower in {"adr", "avg_damage"} and "adr" not in stats:
-                    stats["adr"] = str(value)
-                elif lower in {"per_headshot", "headshot", "hs_rate"} and "headshot" not in stats:
-                    text = str(value)
-                    if text and not text.endswith("%"):
-                        try:
-                            num = float(text)
-                            if num <= 1:
-                                num *= 100
-                            text = f"{num:.0f}%"
-                        except ValueError:
-                            pass
-                    stats["headshot"] = text
-                elif lower in {"win_rate", "winrate", "per_win"} and "winRate" not in stats:
-                    text = str(value)
-                    if text and not text.endswith("%"):
-                        try:
-                            num = float(text)
-                            if num <= 1:
-                                num *= 100
-                            text = f"{num:.0f}%"
-                        except ValueError:
-                            pass
-                    stats["winRate"] = text
-                elif lower in {"elo", "plr", "level_elo", "rank_score", "score"} and "elo" not in stats:
-                    stats["elo"] = str(value)
-                else:
-                    walk(value, f"{path}.{key}")
-        elif isinstance(obj, list):
-            for item in obj[:20]:
-                walk(item, path)
-
-    walk(data)
-    return stats
-
-
-def fetch_from_matches(session: requests.Session, domain: str) -> dict[str, str]:
+def fetch_from_matches(session: requests.Session, uuid: str) -> dict[str, str]:
     """Aggregate recent match stats when player/home is unavailable."""
     now = int(time.time())
     start = now - 180 * 24 * 3600
@@ -264,7 +413,7 @@ def fetch_from_matches(session: requests.Session, domain: str) -> dict[str, str]
                 "date": 0,
                 "start_time": start,
                 "end_time": now,
-                "uuid": domain,
+                "uuid": uuid,
                 "limit": 30,
                 "cs_type": 0,
             },
@@ -272,13 +421,13 @@ def fetch_from_matches(session: requests.Session, domain: str) -> dict[str, str]
         )
         payload = res.json()
     except (requests.RequestException, ValueError) as exc:
-        print(f"API match/list failed for {domain}: {exc}", file=sys.stderr)
+        print(f"API match/list failed for {uuid}: {exc}", file=sys.stderr)
         return {}
 
     matches = payload.get("data")
     if not isinstance(matches, list) or not matches:
         print(
-            f"API match/list empty for {domain}: {payload.get('message') or payload.get('errcode')}",
+            f"API match/list empty for {uuid}: {payload.get('message') or payload.get('errcode')}",
             file=sys.stderr,
         )
         return {}
@@ -339,12 +488,8 @@ def fetch_from_matches(session: requests.Session, domain: str) -> dict[str, str]
     stats["winRate"] = f"{round(wins / len(matches) * 100)}%"
     if elos:
         stats["elo"] = f"{elos[-1]:.0f}"
-    print(f"  match/list aggregated {len(matches)} matches for {domain}")
+    print(f"  match/list aggregated {len(matches)} matches")
     return stats
-
-
-def fetch_recent_winrate(session: requests.Session, domain: str) -> str | None:
-    return fetch_from_matches(session, domain).get("winRate")
 
 
 def load_previous() -> dict[str, Any]:
@@ -391,34 +536,39 @@ def main() -> int:
 
     for player in players:
         member_id = player["memberId"]
-        domain = player["domain"]
+        domain = player.get("domain")
         profile_url = player["profileUrl"]
+        uuid = player.get("uuid")
         print(f"Syncing {member_id} ...")
 
-        stats = fetch_api_home(session, domain)
-        source = "api"
-        if not stats:
-            stats = fetch_from_matches(session, domain)
-            source = "matches"
-        if not stats:
+        if not uuid and domain:
+            uuid = resolve_uuid(session, domain)
+            if not uuid:
+                print(
+                    f"  cannot resolve domain -> uuid for {domain}. "
+                    "Add 36-char uuid to FIVE_E_PLAYERS_JSON.",
+                    file=sys.stderr,
+                )
+
+        stats: dict[str, str] = {}
+        source = "none"
+        if uuid:
+            stats = fetch_api_v3_home(session, uuid)
+            source = "api_v3"
+            if not stats:
+                stats = fetch_from_matches(session, uuid)
+                source = "matches"
+        if not stats and domain:
             stats = fetch_html_profile(session, domain)
             source = "html"
-
-        if stats and "winRate" not in stats and source != "matches":
-            match_stats = fetch_from_matches(session, domain)
-            if match_stats.get("winRate"):
-                stats["winRate"] = match_stats["winRate"]
-            for key in ("rating", "headshot", "kd", "adr", "elo"):
-                if key not in stats and match_stats.get(key):
-                    stats[key] = match_stats[key]
 
         if stats:
             result_players[member_id] = public_player_record(
                 member_id, profile_url, stats, source
             )
             ok_count += 1
+            print(f"  ok via {source}: {stats}")
         else:
-            # Keep last known good public stats if sync fails.
             old = previous_players.get(member_id)
             if isinstance(old, dict) and old.get("stats"):
                 kept = dict(old)
@@ -432,7 +582,9 @@ def main() -> int:
                     profile_url,
                     {},
                     "none",
-                    error="sync_failed",
+                    error="sync_failed_need_uuid"
+                    if not uuid
+                    else "sync_failed",
                 )
                 print(f"  failed for {member_id}")
         time.sleep(1.2)
@@ -448,7 +600,7 @@ def main() -> int:
         encoding="utf-8",
     )
     print(f"Wrote {OUTPUT_PATH} ({ok_count}/{len(players)} ok)")
-    return 0 if players else 0
+    return 0
 
 
 if __name__ == "__main__":
