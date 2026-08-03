@@ -2,12 +2,13 @@ import fs from "fs";
 import path from "path";
 
 export interface FiveEPlayerStats {
-  elo?: string;
   rating?: string;
-  kd?: string;
-  adr?: string;
   headshot?: string;
   winRate?: string;
+  kd?: string;
+  adr?: string;
+  /** 5E 平台分 / PLR 等，前台展示为 5ESS */
+  elo?: string;
 }
 
 export interface FiveEPlayerRecord {

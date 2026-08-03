@@ -34,14 +34,22 @@ export default async function TeamPage() {
             const winRate = liveStats.winRate || member.stats.winRate;
             const kd = liveStats.kd;
             const adr = liveStats.adr;
-            const elo = liveStats.elo;
+            const fiveEss = liveStats.elo;
             const fiveELink =
               member.fiveEUrl ||
               (live?.profileUrl && !live.profileUrl.includes("your-5e")
                 ? live.profileUrl
                 : undefined);
             const hasStats = Boolean(
-              rating || headshot || winRate || kd || adr || elo
+              rating || headshot || winRate || kd || adr || fiveEss
+            );
+            const hasLiveStats = Boolean(
+              liveStats.rating ||
+                liveStats.headshot ||
+                liveStats.winRate ||
+                liveStats.kd ||
+                liveStats.adr ||
+                liveStats.elo
             );
 
             return (
@@ -80,36 +88,12 @@ export default async function TeamPage() {
 
                   {hasStats && (
                     <div className="grid grid-cols-3 gap-2 mb-4">
-                      {elo && (
-                        <div className="text-center">
-                          <div className="text-lg font-bold text-orange-600">
-                            {elo}
-                          </div>
-                          <div className="text-xs text-neutral-500">PLR</div>
-                        </div>
-                      )}
                       {rating && (
                         <div className="text-center">
                           <div className="text-lg font-bold text-blue-600">
                             {rating}
                           </div>
                           <div className="text-xs text-neutral-500">Rating</div>
-                        </div>
-                      )}
-                      {kd && (
-                        <div className="text-center">
-                          <div className="text-lg font-bold text-indigo-600">
-                            {kd}
-                          </div>
-                          <div className="text-xs text-neutral-500">K/D</div>
-                        </div>
-                      )}
-                      {adr && (
-                        <div className="text-center">
-                          <div className="text-lg font-bold text-purple-600">
-                            {adr}
-                          </div>
-                          <div className="text-xs text-neutral-500">ADR</div>
                         </div>
                       )}
                       {headshot && (
@@ -128,9 +112,33 @@ export default async function TeamPage() {
                           <div className="text-xs text-neutral-500">胜率</div>
                         </div>
                       )}
+                      {kd && (
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-indigo-600">
+                            {kd}
+                          </div>
+                          <div className="text-xs text-neutral-500">K/D</div>
+                        </div>
+                      )}
+                      {adr && (
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-purple-600">
+                            {adr}
+                          </div>
+                          <div className="text-xs text-neutral-500">ADR</div>
+                        </div>
+                      )}
+                      {fiveEss && (
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-orange-600">
+                            {fiveEss}
+                          </div>
+                          <div className="text-xs text-neutral-500">5ESS</div>
+                        </div>
+                      )}
                     </div>
                   )}
-                  {live?.stats && Object.keys(live.stats).length > 0 && (
+                  {hasLiveStats && (
                     <p className="text-[11px] text-neutral-400 mb-3">
                       数据来源：5E 定时同步
                     </p>

@@ -6,6 +6,7 @@
 scripts/5e/players.private.json
 scripts/5e/.env
 scripts/5e/.env.*
+scripts/5e/__pycache__/
 
 # Dependencies
 node_modules/

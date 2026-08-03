@@ -101,7 +101,8 @@ def session_from_env() -> requests.Session:
         {
             "User-Agent": USER_AGENT,
             "Accept": "application/json,text/html,*/*",
-            "Referer": "https://arena.5eplay.com/",
+            "Referer": "https://view-arena.5eplay.com/",
+            "Origin": "https://view-arena.5eplay.com",
         }
     )
     token = os.environ.get("FIVE_E_TOKEN", "").strip()
@@ -112,6 +113,10 @@ def session_from_env() -> requests.Session:
     cookie = os.environ.get("FIVE_E_COOKIE", "").strip()
     if cookie:
         session.headers["Cookie"] = cookie
+    print(
+        f"Auth: token={'yes' if os.environ.get('FIVE_E_TOKEN', '').strip() else 'no'}, "
+        f"cookie={'yes' if cookie else 'no'}"
+    )
     return session
 
 
@@ -190,52 +195,66 @@ def fetch_api_home(session: requests.Session, domain: str) -> dict[str, str]:
         print(f"API home failed for {domain}: {exc}", file=sys.stderr)
         return {}
 
-    if not payload.get("success") and not payload.get("data"):
+    if not payload.get("data"):
+        print(
+            f"API home empty for {domain}: {payload.get('message') or payload.get('errcode')}",
+            file=sys.stderr,
+        )
         return {}
 
     data = payload.get("data") or {}
     stats: dict[str, str] = {}
 
-    def pick(*keys: str) -> Any:
-        for key in keys:
-            if key in data and data[key] not in (None, "", "-"):
-                return data[key]
-            # nested common containers
-            for nest_key in ("user_data", "player", "stats", "season_data", "dto"):
-                nest = data.get(nest_key)
-                if isinstance(nest, dict) and nest.get(key) not in (None, "", "-"):
-                    return nest.get(key)
-        return None
+    def walk(obj: Any, path: str = "") -> None:
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                lower = str(key).lower()
+                if value in (None, "", "-"):
+                    continue
+                if lower in {"rating", "rating1", "fight_rating"} and "rating" not in stats:
+                    stats["rating"] = str(value)
+                elif lower in {"kd", "kill_death", "k_d"} and "kd" not in stats:
+                    stats["kd"] = str(value)
+                elif lower in {"adr", "avg_damage"} and "adr" not in stats:
+                    stats["adr"] = str(value)
+                elif lower in {"per_headshot", "headshot", "hs_rate"} and "headshot" not in stats:
+                    text = str(value)
+                    if text and not text.endswith("%"):
+                        try:
+                            num = float(text)
+                            if num <= 1:
+                                num *= 100
+                            text = f"{num:.0f}%"
+                        except ValueError:
+                            pass
+                    stats["headshot"] = text
+                elif lower in {"win_rate", "winrate", "per_win"} and "winRate" not in stats:
+                    text = str(value)
+                    if text and not text.endswith("%"):
+                        try:
+                            num = float(text)
+                            if num <= 1:
+                                num *= 100
+                            text = f"{num:.0f}%"
+                        except ValueError:
+                            pass
+                    stats["winRate"] = text
+                elif lower in {"elo", "plr", "level_elo", "rank_score", "score"} and "elo" not in stats:
+                    stats["elo"] = str(value)
+                else:
+                    walk(value, f"{path}.{key}")
+        elif isinstance(obj, list):
+            for item in obj[:20]:
+                walk(item, path)
 
-    mapping = {
-        "rating": ("rating", "rating1", "fight_rating"),
-        "kd": ("kd", "kill_death", "k_d"),
-        "adr": ("adr", "avg_damage"),
-        "headshot": ("per_headshot", "headshot", "hs_rate"),
-        "winRate": ("win_rate", "winrate", "per_win"),
-        "elo": ("elo", "plr", "level_elo", "rank_score"),
-    }
-    for field, keys in mapping.items():
-        value = pick(*keys)
-        if value is None:
-            continue
-        text = str(value)
-        if field in {"headshot", "winRate"} and text and not text.endswith("%"):
-            try:
-                num = float(text)
-                if num <= 1:
-                    num *= 100
-                text = f"{num:.0f}%"
-            except ValueError:
-                pass
-        stats[field] = text
+    walk(data)
     return stats
 
 
-def fetch_recent_winrate(session: requests.Session, domain: str) -> str | None:
-    """Optional recent win-rate from match list when token works."""
+def fetch_from_matches(session: requests.Session, domain: str) -> dict[str, str]:
+    """Aggregate recent match stats when player/home is unavailable."""
     now = int(time.time())
-    start = now - 90 * 24 * 3600
+    start = now - 180 * 24 * 3600
     try:
         res = session.get(
             f"{API_BASE}/match/list",
@@ -252,14 +271,80 @@ def fetch_recent_winrate(session: requests.Session, domain: str) -> str | None:
             timeout=20,
         )
         payload = res.json()
-    except (requests.RequestException, ValueError):
-        return None
+    except (requests.RequestException, ValueError) as exc:
+        print(f"API match/list failed for {domain}: {exc}", file=sys.stderr)
+        return {}
 
     matches = payload.get("data")
     if not isinstance(matches, list) or not matches:
-        return None
-    wins = sum(1 for m in matches if m.get("is_win"))
-    return f"{round(wins / len(matches) * 100)}%"
+        print(
+            f"API match/list empty for {domain}: {payload.get('message') or payload.get('errcode')}",
+            file=sys.stderr,
+        )
+        return {}
+
+    ratings: list[float] = []
+    adrs: list[float] = []
+    heads: list[float] = []
+    kills = 0
+    deaths = 0
+    wins = 0
+    elos: list[float] = []
+
+    for match in matches:
+        try:
+            if match.get("rating") not in (None, "", "-"):
+                ratings.append(float(match["rating"]))
+            if match.get("adr") not in (None, "", "-"):
+                adrs.append(float(match["adr"]))
+            hs = match.get("per_headshot")
+            if hs not in (None, "", "-"):
+                num = float(hs)
+                if num <= 1:
+                    num *= 100
+                heads.append(num)
+            if match.get("kill") is not None:
+                kills += int(match.get("kill") or 0)
+            if match.get("death") is not None:
+                deaths += int(match.get("death") or 0)
+            if match.get("is_win"):
+                wins += 1
+            elo_val = match.get("level_elo") or match.get("origin_elo")
+            level_info = match.get("level_info") or {}
+            if isinstance(level_info, dict):
+                elo_val = elo_val or level_info.get("elo") or level_info.get("level_elo")
+                try:
+                    origin = float(level_info.get("origin_elo") or 0)
+                    change = float(match.get("change_elo") or 0)
+                    if origin or change:
+                        elo_val = origin + change
+                except (TypeError, ValueError):
+                    pass
+            if elo_val not in (None, "", "-"):
+                elos.append(float(elo_val))
+        except (TypeError, ValueError):
+            continue
+
+    stats: dict[str, str] = {}
+    if ratings:
+        stats["rating"] = f"{sum(ratings) / len(ratings):.2f}"
+    if adrs:
+        stats["adr"] = f"{sum(adrs) / len(adrs):.1f}"
+    if heads:
+        stats["headshot"] = f"{sum(heads) / len(heads):.0f}%"
+    if deaths > 0:
+        stats["kd"] = f"{kills / deaths:.2f}"
+    elif kills > 0:
+        stats["kd"] = str(kills)
+    stats["winRate"] = f"{round(wins / len(matches) * 100)}%"
+    if elos:
+        stats["elo"] = f"{elos[-1]:.0f}"
+    print(f"  match/list aggregated {len(matches)} matches for {domain}")
+    return stats
+
+
+def fetch_recent_winrate(session: requests.Session, domain: str) -> str | None:
+    return fetch_from_matches(session, domain).get("winRate")
 
 
 def load_previous() -> dict[str, Any]:
@@ -286,7 +371,7 @@ def public_player_record(
         "syncedAt": utc_now(),
         "stats": {
             key: stats[key]
-            for key in ("elo", "rating", "kd", "adr", "headshot", "winRate")
+            for key in ("rating", "headshot", "winRate", "kd", "adr", "elo")
             if stats.get(key)
         },
     }
@@ -313,13 +398,19 @@ def main() -> int:
         stats = fetch_api_home(session, domain)
         source = "api"
         if not stats:
+            stats = fetch_from_matches(session, domain)
+            source = "matches"
+        if not stats:
             stats = fetch_html_profile(session, domain)
             source = "html"
 
-        if stats and "winRate" not in stats:
-            win_rate = fetch_recent_winrate(session, domain)
-            if win_rate:
-                stats["winRate"] = win_rate
+        if stats and "winRate" not in stats and source != "matches":
+            match_stats = fetch_from_matches(session, domain)
+            if match_stats.get("winRate"):
+                stats["winRate"] = match_stats["winRate"]
+            for key in ("rating", "headshot", "kd", "adr", "elo"):
+                if key not in stats and match_stats.get(key):
+                    stats[key] = match_stats[key]
 
         if stats:
             result_players[member_id] = public_player_record(
