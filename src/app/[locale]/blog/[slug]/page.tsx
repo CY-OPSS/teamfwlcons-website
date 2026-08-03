@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { getBlogPost, getBlogPosts } from "@/lib/blog";
 import { ViewCounter } from "@/components/ViewCounter";
 import { CommentSection } from "@/components/CommentSection";
-import { AuthProvider } from "@/components/AuthProvider";
 
 export function generateStaticParams() {
   const posts = getBlogPosts("zh");
@@ -28,7 +27,7 @@ export default async function BlogPostPage({
       {/* Header */}
       <header className="mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium rounded">
+          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded">
             {post.category}
           </span>
           <time className="text-neutral-500 text-sm">
@@ -44,18 +43,18 @@ export default async function BlogPostPage({
           <ViewCounter slug={slug} locale={locale} />
         </div>
 
-        <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 dark:text-white mb-4">
+        <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 mb-4">
           {post.title}
         </h1>
 
-        <p className="text-xl text-neutral-600 dark:text-neutral-400">
+        <p className="text-xl text-neutral-600">
           {post.description}
         </p>
 
         {post.author && (
           <div className="mt-6 flex items-center gap-3">
-            <div className="w-10 h-10 bg-neutral-200 dark:bg-neutral-700 rounded-full" />
-            <span className="text-neutral-700 dark:text-neutral-300 font-medium">
+            <div className="w-10 h-10 bg-neutral-200 rounded-full" />
+            <span className="text-neutral-700 font-medium">
               {post.author}
             </span>
           </div>
@@ -75,18 +74,18 @@ export default async function BlogPostPage({
 
       {/* Content */}
       <div
-        className="prose prose-lg dark:prose-invert max-w-none"
+        className="prose prose-lg max-w-none"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
       {/* Tags */}
       {post.tags.length > 0 && (
-        <div className="mt-8 pt-8 border-t border-neutral-200 dark:border-neutral-800">
+        <div className="mt-8 pt-8 border-t border-neutral-200">
           <div className="flex flex-wrap gap-2">
             {post.tags.map((tag) => (
               <span
                 key={tag}
-                className="px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-full text-sm"
+                className="px-3 py-1.5 bg-neutral-100 text-neutral-700 rounded-full text-sm"
               >
                 #{tag}
               </span>
@@ -96,9 +95,7 @@ export default async function BlogPostPage({
       )}
 
       {/* Comments */}
-      <AuthProvider>
-        <CommentSection postSlug={slug} locale={locale} />
-      </AuthProvider>
+      <CommentSection postSlug={slug} />
     </article>
   );
 }
