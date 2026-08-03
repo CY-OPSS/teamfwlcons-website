@@ -11,11 +11,11 @@ export interface TeamMember {
   displayRole: string;
   avatar?: string;
   bio: string;
+  fiveEUrl?: string;
   social: {
-    twitter?: string;
-    github?: string;
+    telegram?: string;
     steam?: string;
-    discord?: string;
+    github?: string;
   };
   stats: {
     rating?: string;
@@ -25,6 +25,21 @@ export interface TeamMember {
 }
 
 const contentDir = path.join(process.cwd(), "src/content/team");
+
+function isUsableUrl(value?: string) {
+  if (!value) return false;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.endsWith("://") || trimmed.endsWith(".com/") || trimmed.endsWith(".com/id/")) {
+    return false;
+  }
+  // Incomplete placeholders like https://t.me/ or https://steamcommunity.com/id/
+  if (/^https?:\/\/[^/]+\/?$/.test(trimmed)) return false;
+  if (/^https?:\/\/t\.me\/?$/.test(trimmed)) return false;
+  if (/^https?:\/\/steamcommunity\.com\/(id|profiles)\/?$/.test(trimmed)) {
+    return false;
+  }
+  return /^https?:\/\//.test(trimmed);
+}
 
 export function getTeamMembers(): TeamMember[] {
   const filePath = path.join(contentDir, "members.yml");
@@ -40,6 +55,8 @@ export function getTeamMembers(): TeamMember[] {
     (member: Record<string, unknown>, index: number) => {
       const role = String(member.role || "Support");
       const isCaptain = Boolean(member.isCaptain);
+      const socialRaw = (member.social as Record<string, string>) || {};
+      const fiveEUrl = member.fiveEUrl ? String(member.fiveEUrl) : undefined;
 
       return {
         id: String(member.id || index),
@@ -49,7 +66,14 @@ export function getTeamMembers(): TeamMember[] {
         displayRole: formatTeamRole(role, isCaptain),
         avatar: member.avatar ? String(member.avatar) : undefined,
         bio: String(member.bio || ""),
-        social: (member.social as TeamMember["social"]) || {},
+        fiveEUrl: isUsableUrl(fiveEUrl) ? fiveEUrl : undefined,
+        social: {
+          telegram: isUsableUrl(socialRaw.telegram)
+            ? socialRaw.telegram
+            : undefined,
+          steam: isUsableUrl(socialRaw.steam) ? socialRaw.steam : undefined,
+          github: isUsableUrl(socialRaw.github) ? socialRaw.github : undefined,
+        },
         stats: (member.stats as TeamMember["stats"]) || {},
       };
     }

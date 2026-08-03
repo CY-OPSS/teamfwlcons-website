@@ -21,6 +21,7 @@ interface TeamMember {
   isCaptain: boolean;
   avatar?: string;
   bio: string;
+  fiveEUrl?: string;
   social: Record<string, string>;
   stats: Record<string, string>;
 }
@@ -69,6 +70,7 @@ function membersToYaml(members: TeamMember[]) {
     lines.push(
       `    bio: "${(member.bio || "").replace(/"/g, '\\"').replace(/\n/g, " ")}"`
     );
+    lines.push(`    fiveEUrl: "${member.fiveEUrl || ""}"`);
     lines.push("    social:");
     const socialKeys = Object.keys(member.social || {}).filter(
       (key) => member.social[key]
@@ -121,10 +123,10 @@ function parseMembersYaml(raw: string): TeamMember[] {
         bio: get("bio") || "",
         social: {
           steam: get("steam") || undefined,
-          twitter: get("twitter") || undefined,
+          telegram: get("telegram") || undefined,
           github: get("github") || undefined,
-          discord: get("discord") || undefined,
         } as Record<string, string>,
+        fiveEUrl: get("fiveEUrl") || undefined,
         stats: {
           rating: get("rating") || undefined,
           headshot: get("headshot") || undefined,
@@ -993,6 +995,81 @@ ${editing.content}`;
                       }
                       className="w-full px-3 py-2 border rounded-md h-24"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Steam 个人主页
+                    </label>
+                    <input
+                      type="text"
+                      value={editingMember.social.steam || ""}
+                      onChange={(e) =>
+                        setMembers((prev) =>
+                          prev.map((m) =>
+                            m.id === editingMember.id
+                              ? {
+                                  ...m,
+                                  social: {
+                                    ...m.social,
+                                    steam: e.target.value,
+                                  },
+                                }
+                              : m
+                          )
+                        )
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="https://steamcommunity.com/id/你的ID 或 /profiles/数字ID"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Telegram
+                    </label>
+                    <input
+                      type="text"
+                      value={editingMember.social.telegram || ""}
+                      onChange={(e) =>
+                        setMembers((prev) =>
+                          prev.map((m) =>
+                            m.id === editingMember.id
+                              ? {
+                                  ...m,
+                                  social: {
+                                    ...m.social,
+                                    telegram: e.target.value,
+                                  },
+                                }
+                              : m
+                          )
+                        )
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="https://t.me/你的用户名"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      5E 个人主页（可选）
+                    </label>
+                    <input
+                      type="text"
+                      value={editingMember.fiveEUrl || ""}
+                      onChange={(e) =>
+                        setMembers((prev) =>
+                          prev.map((m) =>
+                            m.id === editingMember.id
+                              ? { ...m, fiveEUrl: e.target.value }
+                              : m
+                          )
+                        )
+                      }
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="https://arena.5eplay.com/data/player/你的ID"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      5E 无官方公开 API，战绩目前需手动填写；可先保存主页链接。
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">

@@ -81,7 +81,7 @@ export default async function TeamPage() {
                   </div>
                 )}
 
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   {member.social.steam && (
                     <a
                       href={member.social.steam}
@@ -92,14 +92,14 @@ export default async function TeamPage() {
                       Steam
                     </a>
                   )}
-                  {member.social.twitter && (
+                  {member.social.telegram && (
                     <a
-                      href={member.social.twitter}
+                      href={member.social.telegram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-neutral-400 hover:text-blue-400 transition-colors"
+                      className="text-neutral-400 hover:text-sky-500 transition-colors"
                     >
-                      Twitter
+                      Telegram
                     </a>
                   )}
                   {member.social.github && (
@@ -112,14 +112,14 @@ export default async function TeamPage() {
                       GitHub
                     </a>
                   )}
-                  {member.social.discord && (
+                  {member.fiveEUrl && (
                     <a
-                      href={member.social.discord}
+                      href={member.fiveEUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-neutral-400 hover:text-indigo-500 transition-colors"
+                      className="text-neutral-400 hover:text-orange-500 transition-colors"
                     >
-                      Discord
+                      5E
                     </a>
                   )}
                 </div>
