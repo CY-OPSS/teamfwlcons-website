@@ -53,10 +53,20 @@ export async function getSession() {
   return verifySessionToken(token);
 }
 
+function cookieSecure() {
+  // HK mirror is currently HTTP-only; Secure cookies would be dropped by the browser.
+  if (process.env.COOKIE_SECURE === "true") return true;
+  if (process.env.COOKIE_SECURE === "false") return false;
+  const publicUrl = process.env.NEXTAUTH_URL || "";
+  if (publicUrl.startsWith("https://")) return true;
+  if (publicUrl.startsWith("http://")) return false;
+  return process.env.NODE_ENV === "production";
+}
+
 export function setSessionCookie(response: NextResponse, token: string) {
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_DAYS * 24 * 60 * 60,
@@ -66,7 +76,7 @@ export function setSessionCookie(response: NextResponse, token: string) {
 export function clearSessionCookie(response: NextResponse) {
   response.cookies.set(SESSION_COOKIE, "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "lax",
     path: "/",
     maxAge: 0,
