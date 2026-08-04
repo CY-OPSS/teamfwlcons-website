@@ -1,11 +1,11 @@
 ---
-feature: teamfwlcons-website
+feature: Team Fwlcons-website
 status: delivered
 updated: 2026-08-02
 branch: feature/website-v1
 ---
 
-# TeamFwlcons CS2 战队网站
+# Team Fwlcons CS2 战队网站
 
 ## Report
 
@@ -38,7 +38,7 @@ branch: feature/website-v1
 
 ## [S1] Problem
 
-TeamFwlcons 是一支学校 CS2 电竞战队，需要一个官方网站来：
+Team Fwlcons 是一支学校 CS2 电竞战队，需要一个官方网站来：
 - 展示战队成员和成就
 - 发布博客文章和赛事记录
 - 提供 CS2 相关技术文档
@@ -169,7 +169,7 @@ enum Role {
 
 ### 品牌设计
 
-- 队名：TeamFwlcons
+- 队名：Team Fwlcons
 - 定位：学校 CS2 电竞战队
 - 主题色：深蓝 + 金黄（电竞风格）
 - 风格：现代、专业、电竞感

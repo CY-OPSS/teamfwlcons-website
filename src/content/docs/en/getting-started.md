@@ -1,12 +1,12 @@
 ---
 title: "Getting Started"
-description: "Learn how to get started with TeamFwlcons resources and tools."
+description: "Learn how to get started with Team Fwlcons resources and tools."
 order: 1
 ---
 
 # Getting Started
 
-Welcome to the TeamFwlcons documentation center. Here you'll find various resources and guides for the team.
+Welcome to the Team Fwlcons documentation center. Here you'll find various resources and guides for the team.
 
 ## Joining the Team
 

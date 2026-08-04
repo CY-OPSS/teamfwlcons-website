@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TeamFwlcons - CS2 电竞战队",
+  title: "Team Fwlcons - CS2 电竞战队",
   description: "CS2 电竞战队官方网站",
 };
 

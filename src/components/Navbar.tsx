@@ -42,7 +42,7 @@ export function Navbar() {
               <span className="text-white font-bold text-lg">TF</span>
             </div>
             <span className="text-xl font-bold text-neutral-900">
-              TeamFwlcons
+              Team Fwlcons
             </span>
           </Link>
 

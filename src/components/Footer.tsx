@@ -14,7 +14,7 @@ export function Footer() {
                 <span className="text-white font-bold text-lg">TF</span>
               </div>
               <span className="text-xl font-bold text-neutral-900 dark:text-white">
-                TeamFwlcons
+                Team Fwlcons
               </span>
             </div>
             <p className="text-neutral-600 dark:text-neutral-400 max-w-md">
@@ -52,7 +52,7 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-neutral-200 dark:border-neutral-800">
           <p className="text-center text-neutral-500 dark:text-neutral-500 text-sm">
-            © {new Date().getFullYear()} TeamFwlcons. All rights reserved.
+            © {new Date().getFullYear()} Team Fwlcons. All rights reserved.
           </p>
         </div>
       </div>

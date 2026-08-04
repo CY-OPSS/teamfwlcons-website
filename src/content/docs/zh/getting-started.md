@@ -1,12 +1,12 @@
 ---
 title: "快速入门"
-description: "了解如何开始使用 TeamFwlcons 的资源和工具。"
+description: "了解如何开始使用 Team Fwlcons 的资源和工具。"
 order: 1
 ---
 
 # 快速入门
 
-欢迎来到 TeamFwlcons 文档中心。这里汇集了战队的各种资源和指南。
+欢迎来到 Team Fwlcons 文档中心。这里汇集了战队的各种资源和指南。
 
 ## 加入战队
 

@@ -987,7 +987,7 @@ ${doc.content}`;
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
           <h1 className="text-2xl font-bold mb-4 text-center">
-            TeamFwlcons 管理后台
+            Team Fwlcons 管理后台
           </h1>
           <input
             type="password"
@@ -1017,7 +1017,7 @@ ${doc.content}`;
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">TeamFwlcons 管理后台</h1>
+          <h1 className="text-xl font-bold">Team Fwlcons 管理后台</h1>
           <div className="flex items-center gap-4">
             <a href="/" className="text-blue-600 hover:underline">
               查看网站
