@@ -56,7 +56,9 @@ export default async function BlogPostPage({
 
         {post.author && (
           <div className="mt-6 flex items-center gap-3">
-            <div className="w-10 h-10 bg-neutral-200 rounded-full" />
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-sm">TF</span>
+            </div>
             <span className="text-neutral-700 font-medium">
               {post.author}
             </span>
