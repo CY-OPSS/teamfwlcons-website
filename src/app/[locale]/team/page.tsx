@@ -18,8 +18,18 @@ export default async function TeamPage() {
         </p>
         {fiveE.updatedAt && (
           <p className="text-sm text-neutral-400 mt-3">
-            5E 战绩缓存更新于 {new Date(fiveE.updatedAt).toLocaleString("zh-CN")}
-            （非实时）
+            5E 战绩缓存更新于{" "}
+            {new Date(fiveE.updatedAt).toLocaleString("zh-CN", {
+              timeZone: "Asia/Shanghai",
+              year: "numeric",
+              month: "numeric",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+            })}
+            （UTC+8，非实时）
           </p>
         )}
       </div>
