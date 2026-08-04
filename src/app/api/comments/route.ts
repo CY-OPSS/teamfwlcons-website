@@ -84,6 +84,7 @@ export async function POST(request: Request) {
     }
 
     let rootParentId: string | null = null;
+    let notifyUserId: string | null = null;
     if (replyTo) {
       const parent = await prisma.comment.findUnique({
         where: { id: replyTo },
@@ -93,6 +94,7 @@ export async function POST(request: Request) {
           locale: true,
           parentId: true,
           approved: true,
+          userId: true,
         },
       });
 
@@ -112,6 +114,9 @@ export async function POST(request: Request) {
 
       // Keep one nesting level: replies always attach to the top-level comment
       rootParentId = parent.parentId ?? parent.id;
+      if (parent.userId !== session.userId) {
+        notifyUserId = parent.userId;
+      }
     }
 
     const comment = await prisma.comment.create({
@@ -134,6 +139,22 @@ export async function POST(request: Request) {
         },
       },
     });
+
+    if (notifyUserId) {
+      const preview =
+        text.length > 120 ? `${text.slice(0, 120)}…` : text;
+      await prisma.notification.create({
+        data: {
+          type: "comment_reply",
+          userId: notifyUserId,
+          actorId: session.userId,
+          commentId: comment.id,
+          postSlug: post,
+          locale: loc,
+          preview,
+        },
+      });
+    }
 
     return NextResponse.json(comment);
   } catch (error) {

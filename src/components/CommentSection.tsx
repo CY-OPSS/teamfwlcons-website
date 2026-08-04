@@ -359,8 +359,9 @@ export function CommentSection({
           const name = displayName(comment.user);
           return (
             <div
+              id={`comment-${comment.id}`}
               key={comment.id}
-              className="flex gap-4 p-4 bg-neutral-50 rounded-lg"
+              className="flex gap-4 p-4 bg-neutral-50 rounded-lg scroll-mt-24"
             >
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-sm font-bold text-blue-600">
@@ -385,7 +386,11 @@ export function CommentSection({
                     {comment.replies!.map((reply) => {
                       const replyName = displayName(reply.user);
                       return (
-                        <div key={reply.id} className="flex gap-3">
+                        <div
+                          id={`comment-${reply.id}`}
+                          key={reply.id}
+                          className="flex gap-3 scroll-mt-24"
+                        >
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-bold text-blue-600">
                               {replyName.charAt(0).toUpperCase()}

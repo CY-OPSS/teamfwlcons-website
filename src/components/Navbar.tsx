@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type AuthUser = {
   id: string;
@@ -57,18 +58,21 @@ export function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {user ? (
-              <div className="hidden sm:flex items-center gap-3">
-                <span className="text-sm text-neutral-600">{user.username}</span>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900"
-                >
-                  退出
-                </button>
-              </div>
+              <>
+                <NotificationBell />
+                <div className="hidden sm:flex items-center gap-3">
+                  <span className="text-sm text-neutral-600">{user.username}</span>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900"
+                  >
+                    退出
+                  </button>
+                </div>
+              </>
             ) : (
               <Link
                 href="/login"
