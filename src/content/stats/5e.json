@@ -1,25 +1,25 @@
 {
-  "updatedAt": "2026-08-10T05:10:23+00:00",
+  "updatedAt": "2026-08-10T10:40:25+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-08-10T05:10:16+00:00",
+      "syncedAt": "2026-08-10T10:40:18+00:00",
       "stats": {
-        "rating": "1.23",
-        "winRate": "42%",
-        "kd": "1.22",
-        "adr": "89.79",
-        "elo": "+1.27"
+        "rating": "1.21",
+        "winRate": "41%",
+        "kd": "1.20",
+        "adr": "88.94",
+        "elo": "+1.11"
       }
     },
     "player1": {
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-08-10T05:10:18+00:00",
+      "syncedAt": "2026-08-10T10:40:19+00:00",
       "stats": {
         "rating": "1.14",
         "winRate": "47%",
@@ -32,7 +32,7 @@
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-08-10T05:10:19+00:00",
+      "syncedAt": "2026-08-10T10:40:21+00:00",
       "stats": {
         "rating": "1.09",
         "winRate": "52%",
@@ -45,7 +45,7 @@
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-08-10T05:10:21+00:00",
+      "syncedAt": "2026-08-10T10:40:22+00:00",
       "stats": {
         "rating": "0.82",
         "winRate": "41%",
@@ -58,13 +58,13 @@
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-08-10T05:10:22+00:00",
+      "syncedAt": "2026-08-10T10:40:24+00:00",
       "stats": {
-        "rating": "0.92",
-        "winRate": "46%",
+        "rating": "0.93",
+        "winRate": "47%",
         "kd": "0.90",
-        "adr": "70.30",
-        "elo": "-1.77"
+        "adr": "70.94",
+        "elo": "-1.75"
       }
     }
   }
