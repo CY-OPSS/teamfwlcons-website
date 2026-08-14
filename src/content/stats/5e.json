@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-08-14T09:39:45+00:00",
+  "updatedAt": "2026-08-14T15:07:10+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-08-14T09:39:37+00:00",
+      "syncedAt": "2026-08-14T15:07:03+00:00",
       "stats": {
         "rating": "1.21",
         "winRate": "41%",
@@ -19,12 +19,12 @@
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-08-14T09:39:39+00:00",
+      "syncedAt": "2026-08-14T15:07:04+00:00",
       "stats": {
         "rating": "1.12",
-        "winRate": "47%",
+        "winRate": "46%",
         "kd": "1.09",
-        "adr": "82.44",
+        "adr": "82.65",
         "elo": "+1.46"
       }
     },
@@ -32,7 +32,7 @@
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-08-14T09:39:40+00:00",
+      "syncedAt": "2026-08-14T15:07:06+00:00",
       "stats": {
         "rating": "1.09",
         "winRate": "52%",
@@ -45,7 +45,7 @@
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-08-14T09:39:42+00:00",
+      "syncedAt": "2026-08-14T15:07:07+00:00",
       "stats": {
         "rating": "0.82",
         "winRate": "41%",
@@ -58,13 +58,13 @@
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-08-14T09:39:44+00:00",
+      "syncedAt": "2026-08-14T15:07:09+00:00",
       "stats": {
         "rating": "0.93",
-        "winRate": "47%",
+        "winRate": "45%",
         "kd": "0.91",
-        "adr": "71.68",
-        "elo": "-1.51"
+        "adr": "71.61",
+        "elo": "-1.48"
       }
     }
   }
