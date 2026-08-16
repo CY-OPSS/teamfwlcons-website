@@ -10,6 +10,7 @@ interface Post {
   title: string;
   date: string;
   category: string;
+  tags: string[];
   content: string;
   sha: string;
 }
@@ -91,6 +92,32 @@ function slugifyDoc(title: string) {
     .trim()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-\u4e00-\u9fa5]/g, "");
+}
+
+function githubContentsUrl(filePath: string) {
+  const encoded = filePath
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return `https://api.github.com/repos/${REPO}/contents/${encoded}`;
+}
+
+function parseTagList(raw: string): string[] {
+  return raw
+    .split(/[,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function formatTagsYaml(tags: string[]) {
+  if (tags.length === 0) return "[]";
+  return `[${tags.map((tag) => `"${tag.replace(/"/g, '\\"')}"`).join(", ")}]`;
+}
+
+function parseTagsFromFrontmatter(frontmatter: string): string[] {
+  const match = frontmatter.match(/tags:\s*\[([\s\S]*?)\]/);
+  if (!match) return [];
+  return parseTagList(match[1].replace(/["']/g, ""));
 }
 
 function encodeBase64(text: string) {
@@ -197,6 +224,7 @@ export default function AdminPage() {
     title: "",
     date: new Date().toISOString().split("T")[0],
     category: "新闻",
+    tags: "",
     content: "",
   });
 
@@ -301,6 +329,7 @@ export default function AdminPage() {
             let title = f.name.replace(".md", "");
             let date = "";
             let category = "";
+            let tags: string[] = [];
             let body = content;
             if (match) {
               const frontmatter = match[1];
@@ -313,12 +342,14 @@ export default function AdminPage() {
               if (titleMatch) title = titleMatch[1];
               if (dateMatch) date = dateMatch[1];
               if (categoryMatch) category = categoryMatch[1];
+              tags = parseTagsFromFrontmatter(frontmatter);
             }
             return {
               slug: f.name.replace(".md", ""),
               title,
               date,
               category,
+              tags,
               content: body,
               sha: contentData.sha,
             };
@@ -341,21 +372,20 @@ export default function AdminPage() {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-\u4e00-\u9fa5]/g, "")}`;
+    const tags = parseTagList(newPost.tags);
 
     const frontmatter = `---
 title: "${newPost.title}"
 description: ""
 date: "${newPost.date}"
 category: "${newPost.category}"
-tags: []
+tags: ${formatTagsYaml(tags)}
 ---
 
 ${newPost.content}`;
 
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/src/content/blog/zh/${slug}.md`,
-        {
+      const res = await fetch(githubContentsUrl(`src/content/blog/zh/${slug}.md`), {
           method: "PUT",
           headers: {
             ...authHeaders(token),
@@ -374,6 +404,7 @@ ${newPost.content}`;
           title: "",
           date: new Date().toISOString().split("T")[0],
           category: "新闻",
+          tags: "",
           content: "",
         });
         await loadPosts(token);
@@ -388,19 +419,20 @@ ${newPost.content}`;
 
   const updatePost = async () => {
     if (!editing) return;
+    const tags = editing.tags || [];
     const frontmatter = `---
 title: "${editing.title}"
 description: ""
 date: "${editing.date}"
 category: "${editing.category}"
-tags: []
+tags: ${formatTagsYaml(tags)}
 ---
 
 ${editing.content}`;
 
     try {
       const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/src/content/blog/zh/${editing.slug}.md`,
+        githubContentsUrl(`src/content/blog/zh/${editing.slug}.md`),
         {
           method: "PUT",
           headers: {
@@ -432,12 +464,12 @@ ${editing.content}`;
     if (!confirm(`确定要删除文章 "${post.title}" 吗？`)) return;
     try {
       const fileRes = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/src/content/blog/zh/${post.slug}.md`,
+        githubContentsUrl(`src/content/blog/zh/${post.slug}.md`),
         { headers: authHeaders(token) }
       );
       const fileData = await fileRes.json();
       const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/src/content/blog/zh/${post.slug}.md`,
+        githubContentsUrl(`src/content/blog/zh/${post.slug}.md`),
         {
           method: "DELETE",
           headers: {
@@ -1094,6 +1126,11 @@ ${doc.content}`;
                             {post.category && (
                               <span className="ml-2">• {post.category}</span>
                             )}
+                            {post.tags?.length > 0 && (
+                              <span className="ml-2">
+                                • {post.tags.map((tag) => `#${tag}`).join(" ")}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <button
@@ -1169,6 +1206,28 @@ ${doc.content}`;
                     <option value="技术">技术</option>
                     <option value="日常">日常</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">标签</label>
+                  <input
+                    type="text"
+                    value={
+                      editing ? (editing.tags || []).join("，") : newPost.tags
+                    }
+                    onChange={(e) =>
+                      editing
+                        ? setEditing({
+                            ...editing,
+                            tags: parseTagList(e.target.value),
+                          })
+                        : setNewPost({ ...newPost, tags: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-md"
+                    placeholder="多个标签用逗号分隔，例如：纪念，战队，CS2"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    可新建任意标签，多个标签用中文或英文逗号分开
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">

@@ -4,9 +4,16 @@ import { markdownToHtml } from "@/lib/markdown";
 import { ViewCounter } from "@/components/ViewCounter";
 import { CommentSection } from "@/components/CommentSection";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 export function generateStaticParams() {
-  const posts = getBlogPosts("zh");
+  const posts = [
+    ...getBlogPosts("zh"),
+    ...getBlogPosts("en"),
+  ];
   return posts.map((post) => ({
+    locale: post.locale,
     slug: post.slug,
   }));
 }

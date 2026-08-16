@@ -2,6 +2,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { getBlogPosts, getBlogCategories, getBlogTags } from "@/lib/blog";
 
+export const dynamic = "force-dynamic";
+
 export default function BlogPage() {
   const t = useTranslations("blog");
   const posts = getBlogPosts("zh");
