@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-08-18T07:58:10+00:00",
+  "updatedAt": "2026-08-18T14:05:31+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-08-18T07:58:03+00:00",
+      "syncedAt": "2026-08-18T14:05:23+00:00",
       "stats": {
         "rating": "1.21",
         "winRate": "41%",
@@ -19,20 +19,20 @@
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-08-18T07:58:05+00:00",
+      "syncedAt": "2026-08-18T14:05:25+00:00",
       "stats": {
         "rating": "1.12",
         "winRate": "46%",
         "kd": "1.09",
-        "adr": "82.65",
-        "elo": "+1.46"
+        "adr": "82.51",
+        "elo": "+1.42"
       }
     },
     "player2": {
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-08-18T07:58:06+00:00",
+      "syncedAt": "2026-08-18T14:05:26+00:00",
       "stats": {
         "rating": "1.09",
         "winRate": "52%",
@@ -45,7 +45,7 @@
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-08-18T07:58:08+00:00",
+      "syncedAt": "2026-08-18T14:05:28+00:00",
       "stats": {
         "rating": "0.82",
         "winRate": "41%",
@@ -58,13 +58,13 @@
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-08-18T07:58:09+00:00",
+      "syncedAt": "2026-08-18T14:05:29+00:00",
       "stats": {
-        "rating": "0.93",
+        "rating": "0.95",
         "winRate": "45%",
-        "kd": "0.91",
-        "adr": "71.61",
-        "elo": "-1.48"
+        "kd": "0.93",
+        "adr": "72.86",
+        "elo": "-1.31"
       }
     }
   }
