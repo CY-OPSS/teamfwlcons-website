@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-08-20T12:28:53+00:00",
+  "updatedAt": "2026-08-20T18:25:32+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-08-20T12:28:46+00:00",
+      "syncedAt": "2026-08-20T18:25:24+00:00",
       "stats": {
         "rating": "1.21",
         "winRate": "41%",
@@ -19,20 +19,20 @@
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-08-20T12:28:48+00:00",
+      "syncedAt": "2026-08-20T18:25:26+00:00",
       "stats": {
-        "rating": "1.12",
-        "winRate": "45%",
-        "kd": "1.10",
-        "adr": "82.71",
-        "elo": "+1.44"
+        "rating": "1.13",
+        "winRate": "44%",
+        "kd": "1.11",
+        "adr": "82.93",
+        "elo": "+1.48"
       }
     },
     "player2": {
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-08-20T12:28:49+00:00",
+      "syncedAt": "2026-08-20T18:25:27+00:00",
       "stats": {
         "rating": "1.09",
         "winRate": "52%",
@@ -45,7 +45,7 @@
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-08-20T12:28:51+00:00",
+      "syncedAt": "2026-08-20T18:25:29+00:00",
       "stats": {
         "rating": "0.82",
         "winRate": "41%",
@@ -58,13 +58,13 @@
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-08-20T12:28:52+00:00",
+      "syncedAt": "2026-08-20T18:25:30+00:00",
       "stats": {
         "rating": "0.95",
-        "winRate": "43%",
+        "winRate": "42%",
         "kd": "0.93",
-        "adr": "72.89",
-        "elo": "-1.21"
+        "adr": "72.93",
+        "elo": "-1.25"
       }
     }
   }
