@@ -1,70 +1,65 @@
 {
-  "updatedAt": "2026-08-23T18:16:07+00:00",
+  "updatedAt": "2026-08-24T00:44:05+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-08-23T18:15:59+00:00",
+      "syncedAt": "2026-08-24T00:43:57+00:00",
       "stats": {
-        "rating": "1.20",
-        "winRate": "41%",
-        "kd": "1.18",
-        "adr": "88.34",
-        "elo": "+0.92"
+        "rating": "0.00",
+        "winRate": "0%",
+        "adr": "0.00",
+        "elo": "0.00"
       }
     },
     "player1": {
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-08-23T18:16:01+00:00",
+      "syncedAt": "2026-08-24T00:43:59+00:00",
       "stats": {
-        "rating": "1.13",
-        "winRate": "44%",
-        "kd": "1.11",
-        "adr": "82.89",
-        "elo": "+1.50"
+        "rating": "0.00",
+        "winRate": "0%",
+        "adr": "0.00",
+        "elo": "0.00"
       }
     },
     "player2": {
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-08-23T18:16:02+00:00",
+      "syncedAt": "2026-08-24T00:44:00+00:00",
       "stats": {
-        "rating": "1.09",
-        "winRate": "52%",
-        "kd": "1.05",
-        "adr": "83.31",
-        "elo": "+0.41"
+        "rating": "0.00",
+        "winRate": "0%",
+        "adr": "0.00",
+        "elo": "0.00"
       }
     },
     "player3": {
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-08-23T18:16:04+00:00",
+      "syncedAt": "2026-08-24T00:44:02+00:00",
       "stats": {
-        "rating": "0.82",
-        "winRate": "41%",
-        "kd": "0.78",
-        "adr": "62.70",
-        "elo": "-2.99"
+        "rating": "0.00",
+        "winRate": "0%",
+        "adr": "0.00",
+        "elo": "0.00"
       }
     },
     "player4": {
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-08-23T18:16:06+00:00",
+      "syncedAt": "2026-08-24T00:44:04+00:00",
       "stats": {
-        "rating": "0.95",
-        "winRate": "42%",
-        "kd": "0.94",
-        "adr": "72.98",
-        "elo": "-1.18"
+        "rating": "0.00",
+        "winRate": "0%",
+        "adr": "0.00",
+        "elo": "0.00"
       }
     }
   }
