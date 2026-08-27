@@ -1,24 +1,25 @@
 {
-  "updatedAt": "2026-08-27T05:53:37+00:00",
+  "updatedAt": "2026-08-27T17:08:12+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-08-27T05:53:29+00:00",
+      "syncedAt": "2026-08-27T17:08:04+00:00",
       "stats": {
-        "rating": "0.00",
+        "rating": "1.16",
         "winRate": "0%",
-        "adr": "0.00",
-        "elo": "0.00"
+        "kd": "1.18",
+        "adr": "86.72",
+        "elo": "-0.27"
       }
     },
     "player1": {
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-08-27T05:53:31+00:00",
+      "syncedAt": "2026-08-27T17:08:06+00:00",
       "stats": {
         "rating": "1.18",
         "winRate": "40%",
@@ -31,7 +32,7 @@
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-08-27T05:53:33+00:00",
+      "syncedAt": "2026-08-27T17:08:08+00:00",
       "stats": {
         "rating": "0.00",
         "winRate": "0%",
@@ -43,19 +44,20 @@
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-08-27T05:53:34+00:00",
+      "syncedAt": "2026-08-27T17:08:09+00:00",
       "stats": {
-        "rating": "0.00",
+        "rating": "1.04",
         "winRate": "0%",
-        "adr": "0.00",
-        "elo": "0.00"
+        "kd": "0.98",
+        "adr": "80.05",
+        "elo": "+1.24"
       }
     },
     "player4": {
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-08-27T05:53:36+00:00",
+      "syncedAt": "2026-08-27T17:08:11+00:00",
       "stats": {
         "rating": "0.87",
         "winRate": "40%",
