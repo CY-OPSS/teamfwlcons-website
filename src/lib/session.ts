@@ -54,7 +54,7 @@ export async function getSession() {
 }
 
 function cookieSecure() {
-  // HK mirror is currently HTTP-only; Secure cookies would be dropped by the browser.
+  // HTTP origins cannot keep Secure cookies; follow NEXTAUTH_URL unless overridden.
   if (process.env.COOKIE_SECURE === "true") return true;
   if (process.env.COOKIE_SECURE === "false") return false;
   const publicUrl = process.env.NEXTAUTH_URL || "";
