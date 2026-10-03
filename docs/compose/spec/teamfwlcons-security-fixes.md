@@ -1,6 +1,6 @@
 ---
 feature: Team Fwlcons 安全加固 · 第二轮修复清单
-status: code-fixed
+status: verified
 updated: 2026-10-03
 branch: feature/admin-server-proxy
 ---
@@ -47,11 +47,9 @@ branch: feature/admin-server-proxy
   > `db push` 若提示「可能丢失数据」，**停下来确认**，不要一路回车。
   > 只应看到「新增表 AuthAttempt」这一类变更。
 
-- [ ] **A2 · 弄清 e9497c2 再提交**
+- [x] **A2 · 弄清 e9497c2 再提交**
 
-  已 `git fetch`：`e9497c2` 在 `origin/main` 上，提交说明是 `chore: sync 5E display stats`。
-  本地 `main` 仍是 `289596e`，落后 `origin/main`（`4fc6f45`）138 个提交，差异只有 `src/content/stats/5e.json`。
-  **还没合并、也还没提交**，避免把安全改动强推上去。提交前先 merge `origin/main`。
+  `e9497c2` 是自动同步 5E 战绩的提交。已快进合并 `origin/main`（当时只差 `src/content/stats/5e.json`），再提交 `a1e75ce` 并推送，没有强推。
 
   本地 `refs/heads/main` 与 `origin/main` 都停在 `289596ef`（8 月 29 日），
   而线上部署的是 `e9497c2`。该提交在本地仓库中不存在（无 packed-refs、无松对象，
@@ -68,7 +66,7 @@ branch: feature/admin-server-proxy
 
 - [x] **A3 · 设置 `ADMIN_GITHUB_USERS`**（值已写入本地 `.env.local` 与 Vercel Production / Preview / Development：`CY-OPSS`）
 
-  变量要到**这次新代码的部署**才会进生产进程。在那之前，线上仍是旧版本，白名单和 B2 的即时踢人都还没生效。
+  变量已随 `a1e75ce` 的生产部署进入线上。白名单是 `CY-OPSS`。
 
   当前为空 = 任何对该仓库有写权限的 Token 都能登录后台。
   填入你的 GitHub 用户名（逗号分隔，同时更新 Vercel 与本地 `.env.local`）：
@@ -169,22 +167,22 @@ branch: feature/admin-server-proxy
 
 先决条件：A1 已执行，并且 **这次改动已经部署**（含 B 组代码，且该次部署读到了 `ADMIN_GITHUB_USERS`）。
 
-C4 及之后（C4–C12）只在这个新部署上做。不要在当前旧版本的线上环境里勾。旧版本没有这轮后台代理，也还没用上白名单。
+以下均在 `a1e75ce` 上线后的生产环境 `teamfwlcons-website.vercel.app` 上完成。验收时改过的文章标题、代码块和队长头像都已改回。
 
-- [ ] C1 用一个普通账号登录前台 → **成功**（验证 A1 生效：表存在）
-- [ ] C2 新注册一个账号 → **成功**
-- [ ] C3 连续输错密码 9 次 → 第 9 次返回 **429**
-- [ ] C4 用 PAT 登录后台 → 成功；DevTools 中 `localStorage` / `sessionStorage`
-      **搜不到任何 token**
-- [ ] C5 后台 Network 面板中 **没有任何发往 `api.github.com` 的请求**，
+- [x] C1 用一个普通账号登录前台 → **成功**（验证 A1 生效：表存在）
+- [x] C2 新注册一个账号 → **成功**（账号 `tfcheck1003`）
+- [x] C3 连续输错密码 9 次 → 第 9 次返回 **429**
+- [x] C4 用 PAT 登录后台 → 成功；DevTools 中 `localStorage` / `sessionStorage`
+      **搜不到任何 token**（只剩旧的 `nextauth.message`，不是 GitHub Token）
+- [x] C5 后台 Network 面板中 **没有任何发往 `api.github.com` 的请求**，
       请求头里只有 `tf_session` Cookie
-- [ ] C6 改一篇文章标题并保存 → 提示成功，Vercel 出现新部署
-- [ ] C7 上传一张头像 → 成功，`public/images/team/<id>.<ext>` 与 `members.yml` 均更新
-- [ ] C8 未登录访问 `/api/admin/content?path=src/content/team/members.yml` → **401**
-- [ ] C9 访问 `/api/admin/content?path=../../package.json` → **400**
-- [ ] C10 访问 `/api/admin/content?path=README.md` → **400**（前缀白名单）
-- [ ] C11 文章正文里的代码块仍有高亮 class（验证 `rehype-sanitize` 的 className 白名单够用）
-- [ ] C12 打开一篇旧文章，确认消毒没有吃掉原本正常的内嵌 HTML
+- [x] C6 改一篇文章标题并保存 → 提示成功，Vercel 出现新部署
+- [x] C7 上传一张头像 → 成功，`public/images/team/<id>.<ext>` 与 `members.yml` 均更新
+- [x] C8 未登录访问 `/api/admin/content?path=src/content/team/members.yml` → **401**
+- [x] C9 访问 `/api/admin/content?path=../../package.json` → **400**（已登录后；未登录时先返回 401）
+- [x] C10 访问 `/api/admin/content?path=README.md` → **400**（前缀白名单，同样需已登录）
+- [x] C11 文章正文里的代码块仍有高亮 class（验证 `rehype-sanitize` 的 className 白名单够用）
+- [x] C12 打开一篇旧文章，确认消毒没有吃掉原本正常的内嵌 HTML
       —— **这是本次唯一可能影响观感的改动**，若被吃掉需在 `src/lib/markdown.ts`
       的 schema 里补白名单
 
