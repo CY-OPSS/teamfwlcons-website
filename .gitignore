@@ -8,8 +8,12 @@ scripts/5e/.env
 scripts/5e/.env.*
 scripts/5e/__pycache__/
 
+# AI 对话导出：未脱敏的原始记录里含数据库连接串与 Deploy Hook，禁止入库
+TeamFwlcons-cursor-chat-raw.jsonl
+
 # Dependencies
 node_modules/
+.pnpm-store/
 .pnp
 .pnp.js
 

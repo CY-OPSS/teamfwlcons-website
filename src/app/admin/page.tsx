@@ -75,9 +75,6 @@ interface StatsData {
   analyticsUrl: string;
 }
 
-const REPO = "CY-OPSS/teamfwlcons-website";
-const DEPLOY_HOOK =
-  "https://api.vercel.com/v1/integrations/deploy/prj_6L84y6UWCv4NZhJl2lXxQbpX9ZV1/hzXqDN3s2A";
 const MEMBERS_PATH = "src/content/team/members.yml";
 const DOCS_DIR = "src/content/docs/zh";
 const ABOUT_PATH = "src/content/about/zh.json";
@@ -94,12 +91,35 @@ function slugifyDoc(title: string) {
     .replace(/[^a-z0-9-\u4e00-\u9fa5]/g, "");
 }
 
-function githubContentsUrl(filePath: string) {
-  const encoded = filePath
-    .split("/")
-    .map((segment) => encodeURIComponent(segment))
-    .join("/");
-  return `https://api.github.com/repos/${REPO}/contents/${encoded}`;
+async function readContent(path: string) {
+  const res = await fetch(
+    `/api/admin/content?path=${encodeURIComponent(path)}`,
+    { credentials: "same-origin" }
+  );
+  const data = await res.json().catch(() => ({}));
+  return { res, data };
+}
+
+async function writeContent(body: Record<string, unknown>) {
+  const res = await fetch("/api/admin/content", {
+    method: "PUT",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { res, data };
+}
+
+async function removeContent(body: Record<string, unknown>) {
+  const res = await fetch("/api/admin/content", {
+    method: "DELETE",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { res, data };
 }
 
 function parseTagList(raw: string): string[] {
@@ -118,15 +138,6 @@ function parseTagsFromFrontmatter(frontmatter: string): string[] {
   const match = frontmatter.match(/tags:\s*\[([\s\S]*?)\]/);
   if (!match) return [];
   return parseTagList(match[1].replace(/["']/g, ""));
-}
-
-function encodeBase64(text: string) {
-  return btoa(unescape(encodeURIComponent(text)));
-}
-
-function decodeBase64(content: string) {
-  const bytes = Uint8Array.from(atob(content), (c) => c.charCodeAt(0));
-  return new TextDecoder("utf-8").decode(bytes);
 }
 
 function membersToYaml(members: TeamMember[]) {
@@ -249,34 +260,49 @@ export default function AdminPage() {
   const [stats, setStats] = useState<StatsData | null>(null);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("github_token");
-    if (savedToken) {
-      setToken(savedToken);
-      setIsLoggedIn(true);
-      void bootstrap(savedToken);
-    }
+    fetch("/api/admin/session", { credentials: "same-origin" })
+      .then(async (res) => {
+        if (!res.ok) return;
+        setIsLoggedIn(true);
+        await bootstrap();
+      })
+      .catch(() => undefined);
   }, []);
 
-  const bootstrap = async (t: string) => {
+  const bootstrap = async () => {
     await Promise.all([
-      loadPosts(t),
-      loadDocs(t),
-      loadAbout(t),
-      loadMembers(t),
-      loadComments(t),
-      loadStats(t),
+      loadPosts(),
+      loadDocs(),
+      loadAbout(),
+      loadMembers(),
+      loadComments(),
+      loadStats(),
     ]);
   };
 
   const login = async () => {
     if (!token.trim()) return;
-    localStorage.setItem("github_token", token.trim());
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token.trim() }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMessage(data.error || "登录失败");
+      return;
+    }
+    setToken("");
     setIsLoggedIn(true);
-    await bootstrap(token.trim());
+    await bootstrap();
   };
 
-  const logout = () => {
-    localStorage.removeItem("github_token");
+  const logout = async () => {
+    await fetch("/api/admin/logout", {
+      method: "POST",
+      credentials: "same-origin",
+    });
     setIsLoggedIn(false);
     setToken("");
     setPosts([]);
@@ -291,40 +317,33 @@ export default function AdminPage() {
 
   const triggerDeploy = async () => {
     try {
-      await fetch(DEPLOY_HOOK, { method: "POST" });
+      await fetch("/api/admin/deploy", {
+        method: "POST",
+        credentials: "same-origin",
+      });
     } catch {
       // ignore
     }
   };
 
-  const authHeaders = (t: string) => ({
-    Authorization: `token ${t}`,
-    Accept: "application/vnd.github.v3+json",
-  });
-
-  const loadPosts = async (t: string) => {
+  const loadPosts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/src/content/blog/zh`,
-        { headers: authHeaders(t) }
-      );
-      const data = await res.json();
-      if (!Array.isArray(data)) {
-        setMessage("加载文章失败，请检查 Token 权限");
+      const { res, data } = await readContent("src/content/blog/zh");
+      const entries = data.entries as { name: string; path: string }[] | undefined;
+      if (!res.ok || !Array.isArray(entries)) {
+        setMessage(data.error || "加载文章失败");
         setLoading(false);
         return;
       }
 
       const postList = await Promise.all(
-        data
-          .filter((f: { name: string }) => f.name.endsWith(".md"))
-          .map(async (f: { name: string; url: string }) => {
-            const contentRes = await fetch(f.url, {
-              headers: authHeaders(t),
-            });
-            const contentData = await contentRes.json();
-            const content = decodeBase64(contentData.content);
+        entries
+          .filter((f) => f.name.endsWith(".md"))
+          .map(async (f) => {
+            const contentRes = await readContent(f.path);
+            const contentData = contentRes.data;
+            const content = String(contentData.content || "");
             const match = content.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
             let title = f.name.replace(".md", "");
             let date = "";
@@ -385,18 +404,11 @@ tags: ${formatTagsYaml(tags)}
 ${newPost.content}`;
 
     try {
-      const res = await fetch(githubContentsUrl(`src/content/blog/zh/${slug}.md`), {
-          method: "PUT",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: `feat: add blog post "${newPost.title}"`,
-            content: encodeBase64(frontmatter),
-          }),
-        }
-      );
+      const { res, data } = await writeContent({
+        path: `src/content/blog/zh/${slug}.md`,
+        content: frontmatter,
+        message: `feat: add blog post "${newPost.title}"`,
+      });
 
       if (res.ok) {
         setMessage("文章创建成功，正在自动部署...");
@@ -407,10 +419,10 @@ ${newPost.content}`;
           tags: "",
           content: "",
         });
-        await loadPosts(token);
+        await loadPosts();
         await triggerDeploy();
       } else {
-        setMessage("创建失败，请检查 token 权限");
+        setMessage(data.error || "创建失败");
       }
     } catch {
       setMessage("创建失败，请重试");
@@ -431,29 +443,20 @@ tags: ${formatTagsYaml(tags)}
 ${editing.content}`;
 
     try {
-      const res = await fetch(
-        githubContentsUrl(`src/content/blog/zh/${editing.slug}.md`),
-        {
-          method: "PUT",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: `update: edit blog post "${editing.title}"`,
-            content: encodeBase64(frontmatter),
-            sha: editing.sha,
-          }),
-        }
-      );
+      const { res, data } = await writeContent({
+        path: `src/content/blog/zh/${editing.slug}.md`,
+        content: frontmatter,
+        sha: editing.sha,
+        message: `update: edit blog post "${editing.title}"`,
+      });
 
       if (res.ok) {
         setMessage("文章更新成功，正在自动部署...");
         setEditing(null);
-        await loadPosts(token);
+        await loadPosts();
         await triggerDeploy();
       } else {
-        setMessage("更新失败");
+        setMessage(data.error || "更新失败");
       }
     } catch {
       setMessage("更新失败，请重试");
@@ -463,62 +466,40 @@ ${editing.content}`;
   const deletePost = async (post: Post) => {
     if (!confirm(`确定要删除文章 "${post.title}" 吗？`)) return;
     try {
-      const fileRes = await fetch(
-        githubContentsUrl(`src/content/blog/zh/${post.slug}.md`),
-        { headers: authHeaders(token) }
-      );
-      const fileData = await fileRes.json();
-      const res = await fetch(
-        githubContentsUrl(`src/content/blog/zh/${post.slug}.md`),
-        {
-          method: "DELETE",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: `delete: remove blog post "${post.title}"`,
-            sha: fileData.sha,
-          }),
-        }
-      );
+      const { res, data } = await removeContent({
+        path: `src/content/blog/zh/${post.slug}.md`,
+        sha: post.sha,
+        message: `delete: remove blog post "${post.title}"`,
+      });
       if (res.ok) {
         setMessage("文章已删除，正在自动部署...");
         setEditing(null);
-        await loadPosts(token);
+        await loadPosts();
         await triggerDeploy();
       } else {
-        const errData = await res.json();
-        setMessage(`删除失败: ${errData.message || "未知错误"}`);
+        setMessage(data.error || "删除失败");
       }
     } catch (err) {
       setMessage(`删除失败: ${err}`);
     }
   };
 
-  const loadDocs = async (t: string) => {
+  const loadDocs = async () => {
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}`,
-        { headers: authHeaders(t) }
-      );
-      const data = await res.json();
-      if (!Array.isArray(data)) {
+      const { res, data } = await readContent(DOCS_DIR);
+      const entries = data.entries as { name: string; path: string }[] | undefined;
+      if (!res.ok || !Array.isArray(entries)) {
         setDocs([]);
         return;
       }
 
       const docList = await Promise.all(
-        data
-          .filter((f: { name: string; type?: string }) =>
-            f.name.endsWith(".md")
-          )
-          .map(async (f: { name: string; url: string }) => {
-            const contentRes = await fetch(f.url, {
-              headers: authHeaders(t),
-            });
-            const contentData = await contentRes.json();
-            const content = decodeBase64(contentData.content);
+        entries
+          .filter((f) => f.name.endsWith(".md"))
+          .map(async (f) => {
+            const contentRes = await readContent(f.path);
+            const contentData = contentRes.data;
+            const content = String(contentData.content || "");
             const match = content.match(/---\n([\s\S]*?)\n---\n([\s\S]*)/);
             let title = f.name.replace(/\.md$/, "");
             let description = "";
@@ -580,20 +561,11 @@ ${doc.content}`;
     }
 
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}/${slug}.md`,
-        {
-          method: "PUT",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: `feat: add doc "${newDoc.title}"`,
-            content: encodeBase64(buildDocMarkdown(newDoc)),
-          }),
-        }
-      );
+      const { res, data } = await writeContent({
+        path: `${DOCS_DIR}/${slug}.md`,
+        content: buildDocMarkdown(newDoc),
+        message: `feat: add doc "${newDoc.title}"`,
+      });
       if (res.ok) {
         setMessage("文档创建成功，正在自动部署...");
         setNewDoc({
@@ -603,11 +575,10 @@ ${doc.content}`;
           order: docs.length + 1,
           content: "",
         });
-        await loadDocs(token);
+        await loadDocs();
         await triggerDeploy();
       } else {
-        const err = await res.json();
-        setMessage(`创建文档失败: ${err.message || "请检查权限"}`);
+        setMessage(data.error || "创建文档失败");
       }
     } catch {
       setMessage("创建文档失败，请重试");
@@ -617,29 +588,19 @@ ${doc.content}`;
   const updateDoc = async () => {
     if (!editingDoc) return;
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}/${editingDoc.slug}.md`,
-        {
-          method: "PUT",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: `update: edit doc "${editingDoc.title}"`,
-            content: encodeBase64(buildDocMarkdown(editingDoc)),
-            sha: editingDoc.sha,
-          }),
-        }
-      );
+      const { res, data } = await writeContent({
+        path: `${DOCS_DIR}/${editingDoc.slug}.md`,
+        content: buildDocMarkdown(editingDoc),
+        sha: editingDoc.sha,
+        message: `update: edit doc "${editingDoc.title}"`,
+      });
       if (res.ok) {
         setMessage("文档更新成功，正在自动部署...");
         setEditingDoc(null);
-        await loadDocs(token);
+        await loadDocs();
         await triggerDeploy();
       } else {
-        const err = await res.json();
-        setMessage(`更新文档失败: ${err.message || "未知错误"}`);
+        setMessage(data.error || "更新文档失败");
       }
     } catch {
       setMessage("更新文档失败，请重试");
@@ -649,33 +610,18 @@ ${doc.content}`;
   const deleteDoc = async (doc: DocItem) => {
     if (!confirm(`确定要删除文档 "${doc.title}" 吗？`)) return;
     try {
-      const fileRes = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}/${doc.slug}.md`,
-        { headers: authHeaders(token) }
-      );
-      const fileData = await fileRes.json();
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${DOCS_DIR}/${doc.slug}.md`,
-        {
-          method: "DELETE",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: `delete: remove doc "${doc.title}"`,
-            sha: fileData.sha,
-          }),
-        }
-      );
+      const { res, data } = await removeContent({
+        path: `${DOCS_DIR}/${doc.slug}.md`,
+        sha: doc.sha,
+        message: `delete: remove doc "${doc.title}"`,
+      });
       if (res.ok) {
         setMessage("文档已删除，正在自动部署...");
         setEditingDoc(null);
-        await loadDocs(token);
+        await loadDocs();
         await triggerDeploy();
       } else {
-        const err = await res.json();
-        setMessage(`删除文档失败: ${err.message || "未知错误"}`);
+        setMessage(data.error || "删除文档失败");
       }
     } catch (err) {
       setMessage(`删除文档失败: ${err}`);
@@ -706,19 +652,15 @@ ${doc.content}`;
     setMessage(`已导入文件 ${file.name}，确认后点击发布`);
   };
 
-  const loadAbout = async (t: string) => {
+  const loadAbout = async () => {
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${ABOUT_PATH}`,
-        { headers: authHeaders(t) }
-      );
-      const data = await res.json();
-      if (!data.content) {
+      const { res, data } = await readContent(ABOUT_PATH);
+      if (!res.ok || typeof data.content !== "string") {
         setAbout(emptyAbout());
         setAboutSha("");
         return;
       }
-      const raw = JSON.parse(decodeBase64(data.content)) as Partial<AboutData>;
+      const raw = JSON.parse(data.content) as Partial<AboutData>;
       setAboutSha(data.sha);
       setAbout({
         history: Array.isArray(raw.history) ? raw.history.map(String) : [""],
@@ -750,48 +692,33 @@ ${doc.content}`;
         honors: about.honors.filter((h) => h.title.trim()),
         contacts: about.contacts.filter((c) => c.label.trim()),
       };
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${ABOUT_PATH}`,
-        {
-          method: "PUT",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: "update: edit about page content",
-            content: encodeBase64(JSON.stringify(payload, null, 2) + "\n"),
-            ...(aboutSha ? { sha: aboutSha } : {}),
-          }),
-        }
-      );
+      const { res, data } = await writeContent({
+        path: ABOUT_PATH,
+        content: JSON.stringify(payload, null, 2) + "\n",
+        message: "update: edit about page content",
+        ...(aboutSha ? { sha: aboutSha } : {}),
+      });
       if (res.ok) {
-        const data = await res.json();
-        setAboutSha(data.content.sha);
+        setAboutSha(data.sha);
         setAbout(payload);
         setMessage("关于页已保存，正在自动部署...");
         await triggerDeploy();
       } else {
-        const err = await res.json();
-        setMessage(`保存关于页失败: ${err.message || "未知错误"}`);
+        setMessage(data.error || "保存关于页失败");
       }
     } catch {
       setMessage("保存关于页失败，请重试");
     }
   };
 
-  const loadMembers = async (t: string) => {
+  const loadMembers = async () => {
     try {
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${MEMBERS_PATH}`,
-        { headers: authHeaders(t) }
-      );
-      const data = await res.json();
-      if (!data.content) {
-        setMessage("加载团队成员失败");
+      const { res, data } = await readContent(MEMBERS_PATH);
+      if (!res.ok || typeof data.content !== "string") {
+        setMessage(data.error || "加载团队成员失败");
         return;
       }
-      const raw = decodeBase64(data.content);
+      const raw = data.content;
       setMembersSha(data.sha);
       setMembers(parseMembersYaml(raw));
     } catch {
@@ -802,30 +729,19 @@ ${doc.content}`;
   const saveMembers = async () => {
     try {
       const yaml = membersToYaml(members);
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${MEMBERS_PATH}`,
-        {
-          method: "PUT",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: "update: edit team members",
-            content: encodeBase64(yaml),
-            sha: membersSha,
-          }),
-        }
-      );
+      const { res, data } = await writeContent({
+        path: MEMBERS_PATH,
+        content: yaml,
+        sha: membersSha,
+        message: "update: edit team members",
+      });
       if (res.ok) {
-        const data = await res.json();
-        setMembersSha(data.content.sha);
+        setMembersSha(data.sha);
         setMessage("团队成员已保存，正在自动部署...");
         setEditingMemberId(null);
         await triggerDeploy();
       } else {
-        const err = await res.json();
-        setMessage(`保存失败: ${err.message || "未知错误"}`);
+        setMessage(data.error || "保存失败");
       }
     } catch {
       setMessage("保存团队成员失败");
@@ -889,43 +805,24 @@ ${doc.content}`;
       const path = `public/images/team/${memberId}.${ext}`;
 
       let sha: string | undefined;
-      const existing = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${path}?ref=main`,
-        { headers: authHeaders(token) }
-      );
-      if (existing.ok) {
-        const existingData = await existing.json();
-        sha = existingData.sha;
-      } else if (existing.status !== 404) {
-        const err = await existing.json().catch(() => ({}));
-        setMessage(
-          `检查头像失败: ${err.message || existing.statusText || existing.status}`
-        );
+      const existing = await readContent(path);
+      if (existing.res.ok && typeof existing.data.sha === "string") {
+        sha = existing.data.sha;
+      } else if (existing.res.status !== 404) {
+        setMessage(existing.data.error || "检查头像失败");
         return;
       }
 
-      const res = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${path}`,
-        {
-          method: "PUT",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: `update: upload avatar for ${memberId}`,
-            content: base64,
-            branch: "main",
-            ...(sha ? { sha } : {}),
-          }),
-        }
-      );
+      const uploaded = await writeContent({
+        path,
+        content: base64,
+        isBase64: true,
+        message: `update: upload avatar for ${memberId}`,
+        ...(sha ? { sha } : {}),
+      });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        setMessage(
-          `头像上传失败: ${err.message || res.statusText || res.status}`
-        );
+      if (!uploaded.res.ok) {
+        setMessage(uploaded.data.error || "头像上传失败");
         return;
       }
 
@@ -935,28 +832,16 @@ ${doc.content}`;
       );
       setMembers(nextMembers);
 
-      // Persist avatar path into members.yml immediately
       const yaml = membersToYaml(nextMembers);
-      const saveRes = await fetch(
-        `https://api.github.com/repos/${REPO}/contents/${MEMBERS_PATH}`,
-        {
-          method: "PUT",
-          headers: {
-            ...authHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: `update: set avatar for ${memberId}`,
-            content: encodeBase64(yaml),
-            branch: "main",
-            sha: membersSha,
-          }),
-        }
-      );
+      const saveRes = await writeContent({
+        path: MEMBERS_PATH,
+        content: yaml,
+        sha: membersSha,
+        message: `update: set avatar for ${memberId}`,
+      });
 
-      if (saveRes.ok) {
-        const saveData = await saveRes.json();
-        setMembersSha(saveData.content.sha);
+      if (saveRes.res.ok) {
+        setMembersSha(saveRes.data.sha);
         setMessage("头像上传成功，正在自动部署...");
         await triggerDeploy();
       } else {
@@ -967,10 +852,10 @@ ${doc.content}`;
     }
   };
 
-  const loadComments = async (t: string) => {
+  const loadComments = async () => {
     try {
       const res = await fetch("/api/admin/comments", {
-        headers: { Authorization: `Bearer ${t}` },
+        credentials: "same-origin",
       });
       const data = await res.json();
       if (Array.isArray(data)) setComments(data);
@@ -984,10 +869,8 @@ ${doc.content}`;
     try {
       const res = await fetch("/api/admin/comments", {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
       if (res.ok) {
@@ -1002,10 +885,10 @@ ${doc.content}`;
     }
   };
 
-  const loadStats = async (t: string) => {
+  const loadStats = async () => {
     try {
       const res = await fetch("/api/admin/stats", {
-        headers: { Authorization: `Bearer ${t}` },
+        credentials: "same-origin",
       });
       const data = await res.json();
       if (data && !data.error) setStats(data);
@@ -1036,7 +919,7 @@ ${doc.content}`;
             登录
           </button>
           <p className="mt-4 text-sm text-gray-500 text-center">
-            Token 需要 repo 权限
+            登录用的 Token 不会保存在浏览器，建议使用仅限本仓库的细粒度 Token
           </p>
         </div>
       </div>
@@ -1950,7 +1833,7 @@ ${doc.content}`;
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">评论管理 ({comments.length})</h2>
               <button
-                onClick={() => loadComments(token)}
+                onClick={() => loadComments()}
                 className="text-sm text-blue-600 hover:underline"
               >
                 刷新

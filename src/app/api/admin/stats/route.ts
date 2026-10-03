@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getBearerToken, verifyGithubAdmin } from "@/lib/admin-auth";
+import { requireAdminSession } from "@/lib/admin-auth";
 
-export async function GET(request: Request) {
-  const token = getBearerToken(request);
-  if (!(await verifyGithubAdmin(token))) {
+export async function GET() {
+  if (!(await requireAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

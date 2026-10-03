@@ -7,11 +7,19 @@ import {
   getSession,
   setSessionCookie,
 } from "@/lib/session";
+import { recordAttempt, tooManyAttempts } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
     const trimmed = typeof username === "string" ? username.trim() : "";
+    const attemptName = trimmed || "blank";
+    if (await tooManyAttempts(request, attemptName)) {
+      return NextResponse.json(
+        { error: "尝试过于频繁，请稍后再试" },
+        { status: 429 }
+      );
+    }
 
     if (!trimmed || !password) {
       return NextResponse.json(
@@ -39,6 +47,7 @@ export async function POST(request: Request) {
     });
 
     if (existing) {
+      await recordAttempt(request, attemptName);
       return NextResponse.json(
         { error: "用户名已存在，请直接登录" },
         { status: 409 }

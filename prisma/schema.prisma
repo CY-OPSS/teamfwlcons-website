@@ -66,6 +66,14 @@ model Notification {
   @@index([commentId])
 }
 
+model AuthAttempt {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
 model ViewStat {
   id     String @id @default(cuid())
   slug   String

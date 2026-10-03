@@ -11,11 +11,32 @@ export type SessionPayload = {
   role: string;
 };
 
+const DEV_FALLBACK_SECRET = "dev-only-insecure-secret-change-me";
+const MIN_SECRET_LENGTH = 32;
+
 function getSecret() {
-  const secret =
-    process.env.AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    "dev-only-insecure-secret-change-me";
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+
+  if (!secret) {
+    // Fail closed. The fallback below is a public constant, so signing with it
+    // in production would let anyone mint a token carrying role: "ADMIN".
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "AUTH_SECRET (or NEXTAUTH_SECRET) is not set. Refusing to sign or verify sessions."
+      );
+    }
+    return new TextEncoder().encode(DEV_FALLBACK_SECRET);
+  }
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    secret.length < MIN_SECRET_LENGTH
+  ) {
+    throw new Error(
+      `AUTH_SECRET must be at least ${MIN_SECRET_LENGTH} characters in production.`
+    );
+  }
+
   return new TextEncoder().encode(secret);
 }
 
