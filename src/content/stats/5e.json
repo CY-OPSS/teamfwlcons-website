@@ -1,38 +1,38 @@
 {
-  "updatedAt": "2026-10-24T10:01:02+00:00",
+  "updatedAt": "2026-10-24T15:05:25+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-10-24T10:00:54+00:00",
+      "syncedAt": "2026-10-24T15:05:18+00:00",
       "stats": {
-        "rating": "1.14",
-        "winRate": "50%",
-        "kd": "1.20",
-        "adr": "83.78",
-        "elo": "+1.03"
+        "rating": "1.13",
+        "winRate": "49%",
+        "kd": "1.18",
+        "adr": "83.63",
+        "elo": "+0.75"
       }
     },
     "player1": {
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-10-24T10:00:55+00:00",
+      "syncedAt": "2026-10-24T15:05:19+00:00",
       "stats": {
         "rating": "1.13",
-        "winRate": "33%",
-        "kd": "1.09",
-        "adr": "85.04",
-        "elo": "+1.70"
+        "winRate": "29%",
+        "kd": "1.08",
+        "adr": "85.27",
+        "elo": "+1.35"
       }
     },
     "player2": {
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-10-24T10:00:57+00:00",
+      "syncedAt": "2026-10-24T15:05:21+00:00",
       "stats": {
         "rating": "0.00",
         "winRate": "0%",
@@ -44,7 +44,7 @@
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-10-24T10:00:59+00:00",
+      "syncedAt": "2026-10-24T15:05:22+00:00",
       "stats": {
         "rating": "0.83",
         "winRate": "44%",
@@ -57,7 +57,7 @@
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-10-24T10:01:00+00:00",
+      "syncedAt": "2026-10-24T15:05:24+00:00",
       "stats": {
         "rating": "1.11",
         "winRate": "64%",
