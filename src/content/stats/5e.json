@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-14T04:10:12+00:00",
+  "updatedAt": "2026-11-14T12:44:34+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-11-14T04:10:04+00:00",
+      "syncedAt": "2026-11-14T12:44:25+00:00",
       "stats": {
         "rating": "1.06",
         "winRate": "50%",
@@ -19,7 +19,7 @@
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-11-14T04:10:06+00:00",
+      "syncedAt": "2026-11-14T12:44:27+00:00",
       "stats": {
         "rating": "0.00",
         "winRate": "0%",
@@ -31,7 +31,7 @@
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-11-14T04:10:07+00:00",
+      "syncedAt": "2026-11-14T12:44:29+00:00",
       "stats": {
         "rating": "0.00",
         "winRate": "0%",
@@ -43,19 +43,20 @@
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-11-14T04:10:09+00:00",
+      "syncedAt": "2026-11-14T12:44:31+00:00",
       "stats": {
-        "rating": "0.00",
+        "rating": "1.18",
         "winRate": "0%",
-        "adr": "0.00",
-        "elo": "0.00"
+        "kd": "1.00",
+        "adr": "90.60",
+        "elo": "-1.01"
       }
     },
     "player4": {
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-11-14T04:10:11+00:00",
+      "syncedAt": "2026-11-14T12:44:32+00:00",
       "stats": {
         "rating": "0.00",
         "winRate": "0%",
