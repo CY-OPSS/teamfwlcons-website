@@ -1,38 +1,38 @@
 {
-  "updatedAt": "2026-11-21T04:53:27+00:00",
+  "updatedAt": "2026-11-21T13:55:33+00:00",
   "note": "Public display stats only. Credentials are never stored here.",
   "players": {
     "captain": {
       "memberId": "captain",
       "profileUrl": "https://arena.5eplay.com/data/player/0123zilycb7f",
       "source": "api_v3",
-      "syncedAt": "2026-11-21T04:53:19+00:00",
+      "syncedAt": "2026-11-21T13:55:26+00:00",
       "stats": {
-        "rating": "0.99",
+        "rating": "0.97",
         "winRate": "50%",
-        "kd": "1.00",
-        "adr": "73.75",
-        "elo": "-1.40"
+        "kd": "0.97",
+        "adr": "72.26",
+        "elo": "-1.89"
       }
     },
     "player1": {
       "memberId": "player1",
       "profileUrl": "https://arena.5eplay.com/data/player/16792729718uci",
       "source": "api_v3",
-      "syncedAt": "2026-11-21T04:53:20+00:00",
+      "syncedAt": "2026-11-21T13:55:27+00:00",
       "stats": {
-        "rating": "1.13",
-        "winRate": "100%",
-        "kd": "1.50",
-        "adr": "76.71",
-        "elo": "+1.57"
+        "rating": "1.66",
+        "winRate": "75%",
+        "kd": "1.87",
+        "adr": "118.71",
+        "elo": "+7.36"
       }
     },
     "player2": {
       "memberId": "player2",
       "profileUrl": "https://arena.5eplay.com/data/player/0324t1dpu5ss",
       "source": "api_v3",
-      "syncedAt": "2026-11-21T04:53:22+00:00",
+      "syncedAt": "2026-11-21T13:55:29+00:00",
       "stats": {
         "rating": "0.00",
         "winRate": "0%",
@@ -44,7 +44,7 @@
       "memberId": "player3",
       "profileUrl": "https://arena.5eplay.com/data/player/0814m8thfvxq",
       "source": "api_v3",
-      "syncedAt": "2026-11-21T04:53:24+00:00",
+      "syncedAt": "2026-11-21T13:55:31+00:00",
       "stats": {
         "rating": "1.18",
         "winRate": "0%",
@@ -57,12 +57,13 @@
       "memberId": "player4",
       "profileUrl": "https://arena.5eplay.com/data/player/0706yempvsli",
       "source": "api_v3",
-      "syncedAt": "2026-11-21T04:53:26+00:00",
+      "syncedAt": "2026-11-21T13:55:32+00:00",
       "stats": {
-        "rating": "0.00",
-        "winRate": "0%",
-        "adr": "0.00",
-        "elo": "0.00"
+        "rating": "1.16",
+        "winRate": "67%",
+        "kd": "1.25",
+        "adr": "81.98",
+        "elo": "+3.04"
       }
     }
   }
